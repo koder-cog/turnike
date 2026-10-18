@@ -22,6 +22,19 @@ pub struct NetworkManagerClient {
 impl NetworkManagerClient {
     pub async fn new() -> Result<Self, zbus::Error> {
         let conn = Connection::system().await?;
+
+        // Sistem D-Bus arka plan süreci çalışsa bile NetworkManager servisi yüklü
+        // veya aktif olmayabilir (örneğin CI sunucuları ya da farklı ağ yöneticileri).
+        // Bu sebeple istemci başlatılırken NetworkManager servisinin yanıt verdiği doğrulanır.
+        conn.call_method(
+            Some(NM_SERVICE),
+            NM_PATH,
+            Some("org.freedesktop.DBus.Properties"),
+            "Get",
+            &(NM_INTERFACE, "Version"),
+        )
+        .await?;
+
         Ok(Self { conn })
     }
 
@@ -151,7 +164,9 @@ impl NetworkManagerClient {
     }
 
     pub async fn get_active_wifi_ssid(&self) -> Result<Option<String>, zbus::Error> {
-        if let Some(ap) = self.get_current_ap_info().await?
+        // Erişim noktası (AP) telemetri sorgusu başarısız olsa bile aktif 802-11
+        // bağlantı listesi üzerinden SSID tespitine devam edilir.
+        if let Ok(Some(ap)) = self.get_current_ap_info().await
             && !ap.ssid.is_empty()
         {
             return Ok(Some(ap.ssid));
@@ -498,24 +513,27 @@ mod tests {
 
     #[tokio::test]
     async fn test_nm_live_active_connection() {
-        if let Ok(nm) = NetworkManagerClient::new().await {
-            let ssid_res = nm.get_active_wifi_ssid().await;
+        let Ok(nm) = NetworkManagerClient::new().await else {
+            // CI sunucuları veya NetworkManager servisi bulunmayan ortamlarda canlı D-Bus testini atla.
+            return;
+        };
+
+        let ssid_res = nm.get_active_wifi_ssid().await;
+        assert!(
+            ssid_res.is_ok(),
+            "D-Bus üzerinden Wi-Fi SSID sorgusu hata üretmemeli"
+        );
+        if let Ok(Some(ref s)) = ssid_res {
+            let ts_res = nm.get_active_connection_start_time(s).await;
             assert!(
-                ssid_res.is_ok(),
-                "D-Bus üzerinden Wi-Fi SSID sorgusu hata üretmemeli"
+                ts_res.is_ok(),
+                "Aktif bağlantı başlangıç zamanı sorgusu hata üretmemeli"
             );
-            if let Ok(Some(ref s)) = ssid_res {
-                let ts_res = nm.get_active_connection_start_time(s).await;
+            if let Ok(Some(ts)) = ts_res {
                 assert!(
-                    ts_res.is_ok(),
-                    "Aktif bağlantı başlangıç zamanı sorgusu hata üretmemeli"
+                    ts > 0,
+                    "Bağlantı zaman damgası pozitif bir Unix zamanı olmalı"
                 );
-                if let Ok(Some(ts)) = ts_res {
-                    assert!(
-                        ts > 0,
-                        "Bağlantı zaman damgası pozitif bir Unix zamanı olmalı"
-                    );
-                }
             }
         }
     }
