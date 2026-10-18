@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.koder_cog.Turnike</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>AGPL-3.0-or-later</project_license>
+
+  <name>Turnike</name>
+
+  <summary>Manage KYK WiFi sessions</summary>
+  <summary xml:lang="tr">KYK WiFi oturumlarını yönetin</summary>
+
+  <developer id="io.github.koder_cog">
+    <name>koder-cog</name>
+  </developer>
+
+  <description>
+    <p>
+      Turnike takes the hassle out of GSB and KYK dormitory Wi-Fi networks. It signs in automatically without keeping a browser tab open, restores dropped connections, and keeps your network access ready.
+    </p>
+    <p xml:lang="tr">
+      Turnike, GSB ve KYK yurt ağlarındaki portal çilesini ortadan kaldırır. Web tarayıcısı açık tutmaya gerek kalmadan oturumu arka planda yönetir, kopan bağlantıları yeniler ve internet erişimini hazır tutar.
+    </p>
+    <p>
+      Track your general and social media quotas at a glance, review past sessions, and update your account password directly inside the app. Turnike stores credentials safely in the system keyring and integrates smoothly with status bars and custom scripts.
+    </p>
+    <p xml:lang="tr">
+      Genel internet ve sosyal medya kotalarını anlık izleyebilir, oturum geçmişini inceleyebilir ve hesap şifrenizi doğrudan arayüzden güncelleyebilirsiniz. Giriş bilgilerini sistem anahtarlığında güvenle saklayan Turnike, durum çubukları ve özel betiklerle de uyum içinde çalışır.
+    </p>
+  </description>
+
+  <launchable type="desktop-id">io.github.koder_cog.Turnike.desktop</launchable>
+  <pkgname>turnike</pkgname>
+
+  <provides>
+    <binary>turnike</binary>
+  </provides>
+
+  <branding>
+    <color type="primary" scheme_preference="light">#deddda</color>
+    <color type="primary" scheme_preference="dark">#3d3846</color>
+  </branding>
+
+  <url type="homepage">https://github.com/koder-cog/turnike</url>
+  <url type="bugtracker">https://github.com/koder-cog/turnike/issues</url>
+  <url type="vcs-browser">https://github.com/koder-cog/turnike</url>
+
+  <translation type="gettext">turnike</translation>
+  <content_rating type="oars-1.1" />
+
+  <requires>
+    <display_length compare="ge">360</display_length>
+  </requires>
+
+  <recommends>
+    <control>keyboard</control>
+    <control>pointing</control>
+    <control>touch</control>
+  </recommends>
+
+  <categories>
+    <category>GNOME</category>
+    <category>GTK</category>
+    <category>Network</category>
+    <category>Utility</category>
+  </categories>
+
+  <keywords>
+    <keyword>GSBWIFI</keyword>
+    <keyword>GSB</keyword>
+    <keyword>KYK</keyword>
+    <keyword>WiFi</keyword>
+    <keyword>Wi-Fi</keyword>
+    <keyword>Captive Portal</keyword>
+    <keyword>Quota</keyword>
+    <keyword>Dormitory</keyword>
+    <keyword xml:lang="tr">GSBWIFI</keyword>
+    <keyword xml:lang="tr">Portal</keyword>
+    <keyword xml:lang="tr">Yurt</keyword>
+    <keyword xml:lang="tr">İnternet</keyword>
+    <keyword xml:lang="tr">Kota</keyword>
+  </keywords>
+
+  <releases>
+    <release version="0.1.0" date="2026-10-15">
+      <description>
+        <p>Initial release with captive portal sign-in, quota tracking, and account management</p>
+        <p xml:lang="tr">Oturum yönetimi, kota takibi ve hesap işlemlerini içeren ilk sürüm</p>
+      </description>
+    </release>
+  </releases>
+</component>

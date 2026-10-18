@@ -1,0 +1,14 @@
+[Unit]
+Description=Turnike GSB Wi-Fi arka plan servisi
+Documentation=https://github.com/koder-cog/turnike
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/turnike-daemon
+Restart=on-failure
+RestartSec=5s
+Environment=RUST_LOG=info
+
+[Install]
+WantedBy=default.target

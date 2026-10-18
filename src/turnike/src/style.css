@@ -1,0 +1,22 @@
+/* Turnike GTK4 / Libadwaita Minimal Stilleri
+ * GTK kitapçığı (gtk4-rs book) standartlarına uygun olarak
+ * yalnızca kart dolgusu ve ilerleme çubuğu geometri tanımlarını içerir.
+ */
+
+.quota-card {
+    padding: 12px 14px;
+}
+
+progressbar.quota-bar trough,
+progressbar.quota-bar progress {
+    min-height: 8px;
+    border-radius: 999px;
+}
+
+progressbar.quota-bar.warning progress {
+    background-color: @warning_bg_color;
+}
+
+progressbar.quota-bar.error progress {
+    background-color: @error_bg_color;
+}

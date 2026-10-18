@@ -1,0 +1,63 @@
+[package]
+name = "turnike"
+description = "GSB ve KYK yurt ağları için GTK4 ve Libadwaita masaüstü istemcisi"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[[bin]]
+name = "turnike"
+path = "src/main.rs"
+
+[dependencies]
+turnike-types.workspace = true
+turnike-client.workspace = true
+turnike-secret.workspace = true
+turnike-daemon.workspace = true
+async-channel.workspace = true
+gtk4.workspace = true
+libadwaita.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+serde_json.workspace = true
+
+[package.metadata.deb]
+name = "turnike"
+maintainer = "koder-cog <https://github.com/koder-cog>"
+copyright = "2026, koder-cog"
+license-file = ["../../LICENSE", "4"]
+extended-description = """\
+Turnike, GSB ve KYK yurt ağlarında captive portal üzerinden oturum açmanızı, \
+oturumunuzu sonlandırmanızı ve kalan kota bilgilerinizi takip etmenizi sağlayan \
+modern GTK4 ve Libadwaita tabanlı masaüstü uygulaması ve komut satırı aracıdır."""
+depends = "$auto, libadwaita-1-0 (>= 1.5), libgtk-4-1 (>= 4.12)"
+section = "net"
+priority = "optional"
+assets = [
+    ["../../target/release/turnike", "usr/bin/turnike", "755"],
+    ["../../target/release/turnike-cli", "usr/bin/turnike-cli", "755"],
+    ["../../target/release/turnike-daemon", "usr/bin/turnike-daemon", "755"],
+    ["../../data/io.github.koder_cog.Turnike.desktop", "usr/share/applications/io.github.koder_cog.Turnike.desktop", "644"],
+    ["../../data/io.github.koder_cog.Turnike.metainfo.xml", "usr/share/metainfo/io.github.koder_cog.Turnike.metainfo.xml", "644"],
+    ["../../data/icons/hicolor/scalable/apps/io.github.koder_cog.Turnike.svg", "usr/share/icons/hicolor/scalable/apps/io.github.koder_cog.Turnike.svg", "644"],
+    ["../../data/icons/hicolor/symbolic/apps/io.github.koder_cog.Turnike-symbolic.svg", "usr/share/icons/hicolor/symbolic/apps/io.github.koder_cog.Turnike-symbolic.svg", "644"],
+    ["../../data/turnike-daemon.service", "usr/lib/systemd/user/turnike-daemon.service", "644"],
+]
+
+[package.metadata.generate-rpm]
+summary = "GSB ve KYK yurt ağları için masaüstü istemcisi"
+assets = [
+    { source = "../../target/release/turnike", dest = "/usr/bin/turnike", mode = "755" },
+    { source = "../../target/release/turnike-cli", dest = "/usr/bin/turnike-cli", mode = "755" },
+    { source = "../../target/release/turnike-daemon", dest = "/usr/bin/turnike-daemon", mode = "755" },
+    { source = "../../data/io.github.koder_cog.Turnike.desktop", dest = "/usr/share/applications/io.github.koder_cog.Turnike.desktop", mode = "644" },
+    { source = "../../data/io.github.koder_cog.Turnike.metainfo.xml", dest = "/usr/share/metainfo/io.github.koder_cog.Turnike.metainfo.xml", mode = "644" },
+    { source = "../../data/icons/hicolor/scalable/apps/io.github.koder_cog.Turnike.svg", dest = "/usr/share/icons/hicolor/scalable/apps/io.github.koder_cog.Turnike.svg", mode = "644" },
+    { source = "../../data/icons/hicolor/symbolic/apps/io.github.koder_cog.Turnike-symbolic.svg", dest = "/usr/share/icons/hicolor/symbolic/apps/io.github.koder_cog.Turnike-symbolic.svg", mode = "644" },
+    { source = "../../data/turnike-daemon.service", dest = "/usr/lib/systemd/user/turnike-daemon.service", mode = "644" },
+]
+

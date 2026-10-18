@@ -1,0 +1,15 @@
+[Desktop Entry]
+Name=Turnike
+GenericName=Dormitory Network Client
+GenericName[tr]=Yurt Ağı İstemcisi
+Comment=Manage KYK WiFi sessions
+Comment[tr]=KYK WiFi oturumlarını yönetin
+Exec=turnike
+Icon=io.github.koder_cog.Turnike
+Terminal=false
+Type=Application
+Categories=GNOME;GTK;Network;
+Keywords=GSB;KYK;WiFi;Captive;Portal;Quota;Dormitory;Network;
+Keywords[tr]=GSB;KYK;WiFi;Portal;Kota;Yurt;İnternet;Ağ;
+StartupNotify=true
+StartupWMClass=io.github.koder_cog.Turnike

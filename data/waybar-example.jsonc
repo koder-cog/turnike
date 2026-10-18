@@ -1,0 +1,44 @@
+// Waybar için Turnike modülü
+// Bu modül tanımı ~/.config/waybar/config.jsonc içine eklenir.
+
+{
+    "custom/turnike": {
+        "format": " {text}",
+        "return-type": "json",
+        "exec": "turnike-cli status --json",
+        "interval": 60,
+        "on-click": "turnike",
+        "tooltip": true
+    }
+}
+
+/*
+Waybar CSS Tasarım Örneği (~/.config/waybar/style.css):
+
+#custom-turnike {
+    padding: 0 10px;
+    margin: 0 4px;
+    border-radius: 8px;
+}
+
+#custom-turnike.connected {
+    color: #8ff0a4;
+}
+
+#custom-turnike.warning {
+    color: #f6d32d;
+}
+
+#custom-turnike.critical {
+    color: #e01b24;
+    animation: blink 1s linear infinite;
+}
+
+#custom-turnike.locked {
+    color: #ff7800;
+}
+
+#custom-turnike.offline {
+    color: #9a9996;
+}
+*/

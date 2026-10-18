@@ -1,0 +1,27 @@
+[package]
+name = "turnike-daemon"
+description = "GSB yurt ağları için arka plan bağlantı izleyicisi ve otomatik oturum açma servisi"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[dependencies]
+turnike-types.workspace = true
+turnike-client.workspace = true
+turnike-secret.workspace = true
+tokio = { workspace = true, features = ["signal", "net", "process"] }
+tracing.workspace = true
+tracing-subscriber.workspace = true
+thiserror.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+zbus = { version = "5", default-features = false, features = ["tokio"] }
+chrono = { version = "0.4", default-features = false, features = ["clock"] }
+
+[[bin]]
+name = "turnike-daemon"
+path = "src/main.rs"
+

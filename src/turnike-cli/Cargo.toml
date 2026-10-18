@@ -1,0 +1,26 @@
+[package]
+name = "turnike-cli"
+description = "GSB ve KYK yurt ağları için komut satırı (CLI) oturum ve kota yöneticisi"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[[bin]]
+name = "turnike-cli"
+path = "src/main.rs"
+
+[dependencies]
+turnike-types.workspace = true
+turnike-client.workspace = true
+turnike-secret.workspace = true
+turnike-daemon.workspace = true
+clap.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+

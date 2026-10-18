@@ -1,0 +1,17 @@
+[package]
+name = "turnike-client"
+description = "GSB yurt captive portalı için saf HTTP/HTML istemcisi ve kota ayrıştırıcısı"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[dependencies]
+turnike-types.workspace = true
+reqwest.workspace = true
+tokio.workspace = true
+regex.workspace = true
+tracing.workspace = true
+thiserror.workspace = true

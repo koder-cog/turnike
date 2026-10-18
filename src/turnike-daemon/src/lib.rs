@@ -1,0 +1,21 @@
+pub mod config;
+pub mod hooks;
+pub mod latency;
+pub mod nm;
+pub mod notify;
+pub mod preemption;
+pub mod quota_tracker;
+pub mod radar;
+pub mod screensaver;
+pub mod watcher;
+
+pub use config::{config_path, load_config, save_config};
+pub use hooks::{HookContext, HookExecutor};
+pub use latency::{LatencyError, measure_tcp_rtt, measure_tcp_rtt_with_fallback};
+pub use nm::NetworkManagerClient;
+pub use notify::{send_desktop_notification, send_desktop_notification_full};
+pub use preemption::PreemptionTracker;
+pub use quota_tracker::QuotaNotificationTracker;
+pub use radar::{BssidRadar, RadarError, RoamDecision};
+pub use screensaver::ScreenSaverWatcher;
+pub use watcher::NetworkWatcher;

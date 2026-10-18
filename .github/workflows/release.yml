@@ -1,0 +1,101 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+      - "[0-9]*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-packages:
+    name: Build Linux Packages
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libgtk-4-dev \
+            libadwaita-1-dev \
+            libsecret-1-dev \
+            libssl-dev \
+            pkg-config \
+            rpm
+
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install packaging tools
+        run: |
+          cargo install cargo-deb --locked
+          cargo install cargo-generate-rpm --locked
+
+      - name: Build release binaries
+        run: cargo build --release --workspace
+
+      - name: Build Debian package (.deb)
+        run: |
+          cd src/turnike
+          cargo deb --no-build -p turnike --output ../../target/turnike_${{ github.ref_name }}_amd64.deb
+
+      - name: Build RPM package (.rpm)
+        run: |
+          cd src/turnike
+          cargo generate-rpm --output ../../target/turnike-${{ github.ref_name }}-1.x86_64.rpm
+
+      - name: Create standalone binary tarball
+        run: |
+          TARBALL_DIR="turnike-${{ github.ref_name }}-linux-x86_64"
+          mkdir -p "$TARBALL_DIR"
+          cp target/release/turnike "$TARBALL_DIR/"
+          cp target/release/turnike-cli "$TARBALL_DIR/"
+          cp target/release/turnike-daemon "$TARBALL_DIR/"
+          cp -r data "$TARBALL_DIR/"
+          cp -r packaging/install.sh "$TARBALL_DIR/"
+          cp LICENSE "$TARBALL_DIR/"
+          cp README.md "$TARBALL_DIR/"
+          tar -czvf "target/${TARBALL_DIR}.tar.gz" "$TARBALL_DIR"
+
+      - name: Generate SHA256 checksums and release body
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd target
+          sha256sum turnike*.deb turnike*.rpm turnike*.tar.gz > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+
+          cat << 'EOF' > RELEASE_BODY.md
+          ### Doğrulama Referansları
+          İndirdiğiniz paketlerin bütünlüğünü doğrulamak için aşağıdaki SHA-256 özetlerini kullanabilirsiniz:
+          EOF
+
+          awk '{printf "%s: `%s`\n", $2, $1}' SHA256SUMS.txt >> RELEASE_BODY.md
+          echo "" >> RELEASE_BODY.md
+
+          GH_NOTES=$(gh api "repos/${{ github.repository }}/releases/generate-notes" -f tag_name="${{ github.ref_name }}" --jq .body 2>/dev/null || true)
+          if [ -n "$GH_NOTES" ]; then
+            echo "$GH_NOTES" | sed "s/## What's Changed/### Olan Biten/" | sed 's/\*\*Full Changelog\*\*/Tümü/' >> RELEASE_BODY.md
+          else
+            cat << EOF >> RELEASE_BODY.md
+          ### Olan Biten
+          Tümü: ${{ github.server_url }}/${{ github.repository }}/commits/${{ github.ref_name }}
+          EOF
+          fi
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          body_path: target/RELEASE_BODY.md
+          files: |
+            target/*.deb
+            target/*.rpm
+            target/*.tar.gz
+            target/SHA256SUMS.txt
+          generate_release_notes: false

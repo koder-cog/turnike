@@ -1,0 +1,9 @@
+# rust derlemeleri
+target/
+
+# geliştirme sancıları
+.scratch/
+
+# model terbiyeciliği
+.agents/
+AGENTS.md
