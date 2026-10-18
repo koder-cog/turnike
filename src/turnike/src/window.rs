@@ -1289,7 +1289,6 @@ impl MainWindow {
             let alert = AlertDialog::builder()
                 .heading(&heading)
                 .body(t.auth.logout_dialog_body)
-                .prefer_wide_layout(true)
                 .build();
             alert.add_response("cancel", t.auth.logout_dialog_cancel);
             alert.add_response("logout", t.auth.logout_dialog_confirm);
