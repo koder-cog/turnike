@@ -42,7 +42,7 @@ pub enum NetworkEnvironment {
 pub enum ActionResponse {
     StatusUpdated(SessionState),
     NetworkEnvironmentUpdated(NetworkEnvironment),
-    LoginSuccess(QuotaInfo),
+    LoginSuccess(QuotaInfo, bool),
     LoginFailed(PortalError),
     LogoutSuccess,
     LogoutFailed(PortalError),
@@ -1074,12 +1074,36 @@ impl MainWindow {
                                 view_stack_clone.set_visible_child_name("login");
                             }
                         },
-                        ActionResponse::LoginSuccess(info) => {
+                        ActionResponse::LoginSuccess(info, remembered) => {
                             window_title_clone.set_subtitle(t.status.connected);
                             update_dash(&info);
                             trigger_wifi_clone();
                             view_stack_clone.set_visible_child_name("dashboard");
                             login_action_btn_clone.set_sensitive(true);
+
+                            if remembered {
+                                let toast_overlay = toast_overlay_clone.clone();
+                                let toast_title = t.auth.autostart_toast;
+                                let undo_label = t.auth.undo;
+                                glib::spawn_future_local(async move {
+                                    let is_enabled =
+                                        crate::account_pages::is_systemd_service_enabled_async()
+                                            .await;
+                                    if !is_enabled {
+                                        crate::account_pages::set_systemd_service_enabled(true);
+                                        let toast = Toast::builder()
+                                            .title(toast_title)
+                                            .button_label(undo_label)
+                                            .build();
+                                        toast.connect_button_clicked(|_| {
+                                            crate::account_pages::set_systemd_service_enabled(
+                                                false,
+                                            );
+                                        });
+                                        toast_overlay.add_toast(toast);
+                                    }
+                                });
+                            }
                         }
                         ActionResponse::LoginFailed(err) => {
                             let msg = l.portal_error_message(&err);
@@ -1233,7 +1257,7 @@ impl MainWindow {
 
                     match c.login(&creds).await {
                         Ok(info) => {
-                            let _ = s.send(ActionResponse::LoginSuccess(info)).await;
+                            let _ = s.send(ActionResponse::LoginSuccess(info, remember)).await;
                         }
                         Err(e) => {
                             let _ = s.send(ActionResponse::LoginFailed(e)).await;
@@ -1263,6 +1287,7 @@ impl MainWindow {
                 tokio::spawn(async {
                     let _ = SecretStore::clear_async().await;
                 });
+                crate::account_pages::set_systemd_service_enabled(false);
             }
         });
 

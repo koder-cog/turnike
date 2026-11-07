@@ -387,7 +387,7 @@ pub fn push_help_page(nav_view: &NavigationView, lang: Language) {
     nav_view.push(&page);
 }
 
-fn is_systemd_service_enabled() -> bool {
+pub fn is_systemd_service_enabled() -> bool {
     std::process::Command::new("systemctl")
         .args(["--user", "is-enabled", "turnike-daemon.service"])
         .output()
@@ -395,11 +395,22 @@ fn is_systemd_service_enabled() -> bool {
         .unwrap_or(false)
 }
 
-fn set_systemd_service_enabled(enabled: bool) {
+pub async fn is_systemd_service_enabled_async() -> bool {
+    tokio::task::spawn_blocking(is_systemd_service_enabled)
+        .await
+        .unwrap_or(false)
+}
+
+pub fn set_systemd_service_enabled(enabled: bool) {
     let action = if enabled { "enable" } else { "disable" };
-    let _ = std::process::Command::new("systemctl")
-        .args(["--user", action, "--now", "turnike-daemon.service"])
-        .spawn();
+    tokio::spawn(async move {
+        let _ = tokio::task::spawn_blocking(move || {
+            let _ = std::process::Command::new("systemctl")
+                .args(["--user", action, "--now", "turnike-daemon.service"])
+                .output();
+        })
+        .await;
+    });
 }
 
 pub fn show_preferences_dialog(

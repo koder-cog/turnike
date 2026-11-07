@@ -278,6 +278,8 @@ pub struct AuthTexts {
     pub logout_dialog_confirm: &'static str,
     pub register_link: &'static str,
     pub forgot_password_link: &'static str,
+    pub autostart_toast: &'static str,
+    pub undo: &'static str,
 }
 
 pub struct QuotaTexts {
@@ -408,6 +410,8 @@ pub static TR_CATALOG: Catalog = Catalog {
         logout_dialog_confirm: "Oturumu Kapat",
         register_link: "Yeni Kullanıcı Kaydı…",
         forgot_password_link: "Şifre Sıfırlama…",
+        autostart_toast: "Otomatik giriş etkinleştirildi",
+        undo: "Geri Al",
     },
     quota: QuotaTexts {
         title: "Kotalar",
@@ -550,6 +554,8 @@ pub static EN_CATALOG: Catalog = Catalog {
         logout_dialog_confirm: "Log Out",
         register_link: "New User Registration…",
         forgot_password_link: "Reset Password…",
+        autostart_toast: "Automatic login enabled",
+        undo: "Undo",
     },
     quota: QuotaTexts {
         title: "Quotas",
