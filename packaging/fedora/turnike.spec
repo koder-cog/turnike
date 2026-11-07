@@ -16,12 +16,20 @@ BuildRequires:  pkgconfig(libadwaita-1) >= 1.5
 BuildRequires:  pkgconfig(libsecret-1)
 BuildRequires:  pkgconfig(openssl)
 BuildRequires:  desktop-file-utils
+%if 0%{?suse_version}
+BuildRequires:  appstream-glib
+%else
 BuildRequires:  libappstream-glib
+%endif
 
+%{!?_userunitdir: %define _userunitdir %{_prefix}/lib/systemd/user}
+
+%if 0%{?fedora} || 0%{?rhel}
 Requires:       gtk4 >= 4.12
 Requires:       libadwaita >= 1.5
 Requires:       libsecret
 Requires:       openssl-libs
+%endif
 Recommends:     NetworkManager
 
 %description

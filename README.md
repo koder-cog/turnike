@@ -33,12 +33,11 @@ sudo apt install ./turnike_*_amd64.deb
 sudo apt remove turnike
 ```
 
-### Fedora-openSUSE gibi dağıtımlar
+### Fedora ve openSUSE gibi dağıtımlar
 
-COPR deposu eklenerek:
+Fedora (COPR):
 
 ```bash
-# Fedora Copr Deposu (Önerilen)
 sudo dnf copr enable koder-cog/turnike
 sudo dnf install turnike
 
@@ -46,17 +45,29 @@ sudo dnf install turnike
 sudo dnf remove turnike
 ```
 
-Alternatif olarak [Releases](https://github.com/koder-cog/turnike/releases) sayfasından `.rpm` paketi indirilerek:
+openSUSE Tumbleweed (COPR):
+
+```bash
+sudo zypper addrepo https://copr.fedorainfracloud.org/coprs/koder-cog/turnike/repo/opensuse-tumbleweed/turnike-opensuse-tumbleweed.repo
+sudo zypper refresh
+sudo zypper install turnike
+
+# Kaldırmak için
+sudo zypper remove turnike
+```
+
+Diğer RPM tabanlı dağıtımlar için (veya alternatif olarak) [Releases](https://github.com/koder-cog/turnike/releases) sayfasından `.rpm` paketi indirilerek:
 
 ```bash
 # Fedora / RHEL
 sudo dnf install ./turnike-*.rpm
 
 # openSUSE
-# sudo zypper install ./turnike-*.rpm
+sudo zypper install ./turnike-*.rpm
 
 # Kaldırmak için
 sudo dnf remove turnike
+# veya openSUSE için: sudo zypper remove turnike
 ```
 
 ### Arch Linux/CachyOS gibi dağıtımlar
