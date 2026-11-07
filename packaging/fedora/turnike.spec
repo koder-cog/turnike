@@ -23,6 +23,7 @@ BuildRequires:  libappstream-glib
 %endif
 
 %{!?_userunitdir: %define _userunitdir %{_prefix}/lib/systemd/user}
+%{!?_metainfodir: %define _metainfodir %{_datadir}/metainfo}
 
 %if 0%{?fedora} || 0%{?rhel}
 Requires:       gtk4 >= 4.12
