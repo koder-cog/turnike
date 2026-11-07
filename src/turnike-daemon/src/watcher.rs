@@ -227,7 +227,9 @@ impl NetworkWatcher {
 
                 if current_state == SessionState::CaptiveLocked && self.config.auto_login {
                     if keyring_warned {
-                        debug!("Anahtarlık kilitli veya erişilemez durumda, ağ değişene kadar tekrar denenmiyor");
+                        debug!(
+                            "Anahtarlık kilitli veya erişilemez durumda, ağ değişene kadar tekrar denenmiyor"
+                        );
                     } else {
                         info!(
                             "Captive portal kilitli tespit edildi, otomatik giriş akışı başlatılıyor"
@@ -236,128 +238,133 @@ impl NetworkWatcher {
                         match SecretStore::load_async().await {
                             Ok(Some(creds)) => {
                                 keyring_warned = false;
-                            let is_tr = std::env::var("LC_ALL")
-                                .or_else(|_| std::env::var("LC_MESSAGES"))
-                                .or_else(|_| std::env::var("LANG"))
-                                .unwrap_or_default()
-                                .to_lowercase()
-                                .starts_with("tr");
+                                let is_tr = std::env::var("LC_ALL")
+                                    .or_else(|_| std::env::var("LC_MESSAGES"))
+                                    .or_else(|_| std::env::var("LANG"))
+                                    .unwrap_or_default()
+                                    .to_lowercase()
+                                    .starts_with("tr");
 
-                            match self.client.login(&creds).await {
-                                Ok(info) => {
-                                    info!("Otomatik portal girişi tamamlandı");
-                                    let (summary, body) = if is_tr {
-                                        ("Oturum Açıldı", "GSB WiFi portalında oturum açıldı")
-                                    } else {
-                                        ("Signed In", "Signed in to GSB WiFi portal")
-                                    };
-                                    send_desktop_notification(summary, body).await;
-                                    self.quota_tracker
-                                        .check_and_notify(&info, &self.config)
-                                        .await;
-
-                                    HookExecutor::trigger(
-                                        &self.config.hooks,
-                                        HookContext {
-                                            event: "login",
-                                            username: Some(creds.username.clone()),
-                                            remaining_mb: Some(info.remaining_mb()),
-                                            total_mb: Some(info.total_mb()),
-                                            ssid: Some(self.config.target_ssid.clone()),
-                                            ..Default::default()
-                                        },
-                                    );
-
-                                    current_state = SessionState::Authenticated(info);
-                                }
-                                Err(PortalError::MaxSessionsReached(msg)) => {
-                                    warn!("Portal maksimum oturum hatası verdi: {msg}");
-
-                                    if self.config.auto_preempt {
-                                        if self.preemption.try_acquire() {
-                                            info!(
-                                                "Askıda kalan oturumu devralma (preemption) deneniyor"
-                                            );
-                                            match self.client.preempt_session(&creds).await {
-                                                Ok(info) => {
-                                                    info!("Askıda kalan oturum devralındı");
-                                                    let (summary, body) = if is_tr {
-                                                        (
-                                                            "Oturum Devralındı",
-                                                            "Askıda kalan oturum devralındı",
-                                                        )
-                                                    } else {
-                                                        (
-                                                            "Session Preempted",
-                                                            "Session preempted from previous device",
-                                                        )
-                                                    };
-                                                    send_desktop_notification(summary, body).await;
-                                                    self.quota_tracker
-                                                        .check_and_notify(&info, &self.config)
-                                                        .await;
-
-                                                    HookExecutor::trigger(
-                                                        &self.config.hooks,
-                                                        HookContext {
-                                                            event: "login",
-                                                            username: Some(creds.username.clone()),
-                                                            remaining_mb: Some(info.remaining_mb()),
-                                                            total_mb: Some(info.total_mb()),
-                                                            ssid: Some(
-                                                                self.config.target_ssid.clone(),
-                                                            ),
-                                                            ..Default::default()
-                                                        },
-                                                    );
-
-                                                    current_state =
-                                                        SessionState::Authenticated(info);
-                                                }
-                                                Err(e) => {
-                                                    error!(
-                                                        "Oturum devralma girişimi başarısız: {e}"
-                                                    );
-                                                }
-                                            }
+                                match self.client.login(&creds).await {
+                                    Ok(info) => {
+                                        info!("Otomatik portal girişi tamamlandı");
+                                        let (summary, body) = if is_tr {
+                                            ("Oturum Açıldı", "GSB WiFi portalında oturum açıldı")
                                         } else {
-                                            error!(
-                                                "Oturum devralma sınırı aşıldı, ping-pong koruması devreye girdi"
-                                            );
-                                            let (summary, body) = if is_tr {
-                                                (
-                                                    "Oturum Çakışması",
-                                                    "Başka bir cihazla sürekli oturum çakışması yaşandığı için devralma durduruldu",
-                                                )
+                                            ("Signed In", "Signed in to GSB WiFi portal")
+                                        };
+                                        send_desktop_notification(summary, body).await;
+                                        self.quota_tracker
+                                            .check_and_notify(&info, &self.config)
+                                            .await;
+
+                                        HookExecutor::trigger(
+                                            &self.config.hooks,
+                                            HookContext {
+                                                event: "login",
+                                                username: Some(creds.username.clone()),
+                                                remaining_mb: Some(info.remaining_mb()),
+                                                total_mb: Some(info.total_mb()),
+                                                ssid: Some(self.config.target_ssid.clone()),
+                                                ..Default::default()
+                                            },
+                                        );
+
+                                        current_state = SessionState::Authenticated(info);
+                                    }
+                                    Err(PortalError::MaxSessionsReached(msg)) => {
+                                        warn!("Portal maksimum oturum hatası verdi: {msg}");
+
+                                        if self.config.auto_preempt {
+                                            if self.preemption.try_acquire() {
+                                                info!(
+                                                    "Askıda kalan oturumu devralma (preemption) deneniyor"
+                                                );
+                                                match self.client.preempt_session(&creds).await {
+                                                    Ok(info) => {
+                                                        info!("Askıda kalan oturum devralındı");
+                                                        let (summary, body) = if is_tr {
+                                                            (
+                                                                "Oturum Devralındı",
+                                                                "Askıda kalan oturum devralındı",
+                                                            )
+                                                        } else {
+                                                            (
+                                                                "Session Preempted",
+                                                                "Session preempted from previous device",
+                                                            )
+                                                        };
+                                                        send_desktop_notification(summary, body)
+                                                            .await;
+                                                        self.quota_tracker
+                                                            .check_and_notify(&info, &self.config)
+                                                            .await;
+
+                                                        HookExecutor::trigger(
+                                                            &self.config.hooks,
+                                                            HookContext {
+                                                                event: "login",
+                                                                username: Some(
+                                                                    creds.username.clone(),
+                                                                ),
+                                                                remaining_mb: Some(
+                                                                    info.remaining_mb(),
+                                                                ),
+                                                                total_mb: Some(info.total_mb()),
+                                                                ssid: Some(
+                                                                    self.config.target_ssid.clone(),
+                                                                ),
+                                                                ..Default::default()
+                                                            },
+                                                        );
+
+                                                        current_state =
+                                                            SessionState::Authenticated(info);
+                                                    }
+                                                    Err(e) => {
+                                                        error!(
+                                                            "Oturum devralma girişimi başarısız: {e}"
+                                                        );
+                                                    }
+                                                }
                                             } else {
-                                                (
-                                                    "Session Conflict",
-                                                    "Session preemption stopped due to repeated device conflicts",
-                                                )
-                                            };
-                                            send_desktop_notification(summary, body).await;
+                                                error!(
+                                                    "Oturum devralma sınırı aşıldı, ping-pong koruması devreye girdi"
+                                                );
+                                                let (summary, body) = if is_tr {
+                                                    (
+                                                        "Oturum Çakışması",
+                                                        "Başka bir cihazla sürekli oturum çakışması yaşandığı için devralma durduruldu",
+                                                    )
+                                                } else {
+                                                    (
+                                                        "Session Conflict",
+                                                        "Session preemption stopped due to repeated device conflicts",
+                                                    )
+                                                };
+                                                send_desktop_notification(summary, body).await;
+                                            }
                                         }
                                     }
-                                }
-                                Err(e) => {
-                                    error!("Otomatik giriş başarısız oldu: {e}");
+                                    Err(e) => {
+                                        error!("Otomatik giriş başarısız oldu: {e}");
+                                    }
                                 }
                             }
-                        }
-                        Ok(None) => {
-                            debug!(
-                                "Anahtarlıkta kayıtlı kimlik bilgisi bulunamadı, otomatik giriş atlandı"
-                            );
-                            keyring_warned = true;
-                        }
-                        Err(e) => {
-                            warn!(
-                                "Sistem anahtarlığından kimlik bilgisi okunamadı (anahtarlık kilitli olabilir): {e}. Ağ bağlantısı yenilenene kadar bekleniyor"
-                            );
-                            keyring_warned = true;
+                            Ok(None) => {
+                                debug!(
+                                    "Anahtarlıkta kayıtlı kimlik bilgisi bulunamadı, otomatik giriş atlandı"
+                                );
+                                keyring_warned = true;
+                            }
+                            Err(e) => {
+                                warn!(
+                                    "Sistem anahtarlığından kimlik bilgisi okunamadı (anahtarlık kilitli olabilir): {e}. Ağ bağlantısı yenilenene kadar bekleniyor"
+                                );
+                                keyring_warned = true;
+                            }
                         }
                     }
-                }
                 }
 
                 let _ = tx.send(current_state);
