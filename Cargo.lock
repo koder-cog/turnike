@@ -2523,7 +2523,7 @@ checksum = "e421abadd41a4225275504ea4d6566923418b7f05506fbc9c0fe86ba7396114b"
 
 [[package]]
 name = "turnike"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "async-channel",
  "gtk4",
@@ -2540,7 +2540,7 @@ dependencies = [
 
 [[package]]
 name = "turnike-cli"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "clap",
  "serde",
@@ -2556,7 +2556,7 @@ dependencies = [
 
 [[package]]
 name = "turnike-client"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "regex",
  "reqwest",
@@ -2568,7 +2568,7 @@ dependencies = [
 
 [[package]]
 name = "turnike-daemon"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "chrono",
  "serde",
@@ -2585,7 +2585,7 @@ dependencies = [
 
 [[package]]
 name = "turnike-secret"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "keyring",
  "serde",
@@ -2598,7 +2598,7 @@ dependencies = [
 
 [[package]]
 name = "turnike-types"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "serde",
  "serde_json",
