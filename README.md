@@ -6,7 +6,7 @@
 
 ---
 
-Turnike, KYK yurtlarındaki `GSBWIFI` portalı için geliştirilmiş bir GTK4 ve Libadwaita istemcisidir. Tarayıcı açmaya gerek kalmadan ağa bağlanmayı ve kalan kotayı takip etmeyi sağlar. Turnike projesinin Gençlik ve Spor Bakanlığı veya Kredi ve Yurtlar Genel Müdürlüğü ile resmî bir bağı yoktur.
+Turnike, KYK yurtlarındaki GSBWIFI portalı için geliştirilmiş bir GTK4 ve Libadwaita istemcisidir. Tarayıcı açmaya gerek kalmadan ağa bağlanmayı ve kalan kotayı takip etmeyi sağlar. Turnike projesinin Gençlik ve Spor Bakanlığı veya Kredi ve Yurtlar Genel Müdürlüğü ile resmi bir bağı yoktur.
 
 ## Özellikler
 
@@ -18,11 +18,13 @@ Turnike, KYK yurtlarındaki `GSBWIFI` portalı için geliştirilmiş bir GTK4 ve
 
 ## Kurulum
 
-i3, Sway veya Hyprland gibi bağımsız pencere yöneticisi kullanan ortamlarda kimlik bilgilerinin sistem anahtarlığında saklanabilmesi için gnome-keyring, keepassxc ya da kwallet gibi çalışan bir `org.freedesktop.secrets` sağlayıcısı gereklidir. GNOME ve KDE gibi tam masaüstü ortamlarında bu servis kendiliğinden çalışır.
+### Gereksinimler
 
-### Ubuntu ve Debian
+i3, Sway veya Hyprland gibi pencere yöneticisi kullanılan ortamlarda kimlik bilgilerinin sistemde saklanabilmesi için gnome-keyring, keepassxc ya da kwallet gibi bir `org.freedesktop.secrets` sağlayıcısı gereklidir. GNOME ve KDE gibi masaüstü ortamlarında bunlar genellikle önyüklü olarak gelir.
 
-[Releases](https://github.com/koder-cog/turnike/releases) sayfasından `.deb` paketini indirdikten sonra:
+### Ubuntu-Debian gibi dağıtımlar
+
+[Releases](https://github.com/koder-cog/turnike/releases) sayfasından `.deb` paketi indirilerek:
 
 ```bash
 sudo apt install ./turnike_*_amd64.deb
@@ -31,9 +33,20 @@ sudo apt install ./turnike_*_amd64.deb
 sudo apt remove turnike
 ```
 
-### Fedora ve openSUSE
+### Fedora-openSUSE gibi dağıtımlar
 
-[Releases](https://github.com/koder-cog/turnike/releases) sayfasından `.rpm` paketini indirdikten sonra:
+COPR deposu eklenerek:
+
+```bash
+# Fedora Copr Deposu (Önerilen)
+sudo dnf copr enable koder-cog/turnike
+sudo dnf install turnike
+
+# Kaldırmak için
+sudo dnf remove turnike
+```
+
+Alternatif olarak [Releases](https://github.com/koder-cog/turnike/releases) sayfasından `.rpm` paketi indirilerek:
 
 ```bash
 # Fedora / RHEL
@@ -46,7 +59,7 @@ sudo dnf install ./turnike-*.rpm
 sudo dnf remove turnike
 ```
 
-### Arch Linux
+### Arch Linux/CachyOS gibi dağıtımlar
 
 ```bash
 git clone https://github.com/koder-cog/turnike.git
@@ -59,7 +72,7 @@ sudo pacman -R turnike
 
 ### Diğer Dağıtımlar
 
-Depoyu klonlayarak veya Releases sayfasındaki arşivden:
+Depoyu klonlayarak veya [Releases](https://github.com/koder-cog/turnike/releases) sayfasındaki arşivden:
 
 ```bash
 # Mevcut kullanıcı için
@@ -76,7 +89,7 @@ Depoyu klonlayarak veya Releases sayfasındaki arşivden:
 
 ### Grafik Arayüz
 
-Uygulama menüsünden **Turnike** seçilebilir ya da terminalden başlatılabilir:
+Uygulama menüsünden seçilebilir ya da terminalden başlatılabilir:
 
 ```bash
 turnike
@@ -91,20 +104,24 @@ turnike-cli login            # Portala giriş
 turnike-cli logout           # Çıkış
 turnike-cli quota            # Kalan kotayı listele
 turnike-cli ping             # Ping ölçümü
-turnike-cli wifi radar       # Erişim noktası radarı
+turnike-cli wifi radar       # Erişim noktası seçici
 ```
 
 ### Arka Plan Servisi
 
-`GSBWIFI` ağına bağlanıldığında arka planda otomatik giriş yapılması için kullanıcı servisi etkinleştirilebilir:
+Uygulama üzerinden kimlik bilgileri kaydedilerek oturum açıldığında veya Ayarlar menüsünden arka plan servisi otomatik olarak etkinleştirilir. Servisi terminalden elle yönetmek için:
 
 ```bash
+# Servisi başlatmak ve etkinleştirmek için
 systemctl --user enable --now turnike-daemon.service
+
+# Durumunu kontrol etmek için
+systemctl --user status turnike-daemon.service
 ```
 
 ### Durum Çubuğu Entegrasyonu
 
-Waybar yapılandırmasına şu modül eklenebilir:
+Waybar yapılandırmasına şöyle bir modül eklenebilir:
 
 ```jsonc
 "custom/turnike": {
@@ -155,4 +172,4 @@ cargo test --workspace
 
 ## Lisans
 
-Bu proje [AGPL-3.0-or-later](LICENSE) ile lisanslanmıştır. Gayriresmî Türkçe çevirisi için [LICENSE_TR](LICENSE_TR) dosyasına bakabilirsiniz. Turnike marka hakları hakkında bilgi edinmek için [TRADEMARK](TRADEMARK.md) dosyasına bakabilirsiniz.
+Bu proje [AGPL-3.0-or-later](LICENSE) ile lisanslanmıştır. Gayriresmi Türkçe çevirisi için [LICENSE_TR](LICENSE_TR) dosyasına bakabilirsiniz. Turnike marka hakları hakkında bilgi edinmek için [TRADEMARK](TRADEMARK.md) dosyasına bakabilirsiniz.

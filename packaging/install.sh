@@ -310,11 +310,18 @@ if command -v gtk4-update-icon-cache >/dev/null 2>&1; then
 fi
 if command -v systemctl >/dev/null 2>&1; then
     systemctl --user daemon-reload >/dev/null 2>&1 || true
+    if [ "$USER_MODE" -eq 1 ]; then
+        systemctl --user enable turnike-daemon.service >/dev/null 2>&1 || true
+    fi
 fi
 
 echo ""
 echo "Turnike başarıyla kuruldu!"
 echo "  - Grafik Arayüz: turnike"
 echo "  - Komut Satırı: turnike-cli --help"
-echo "  - Arka Plan Servisi: systemctl --user enable --now turnike-daemon.service"
+if [ "$USER_MODE" -eq 1 ]; then
+    echo "  - Arka Plan Servisi: Etkinleştirildi (ilk girişte şifre kaydedildiğinde devreye girer)"
+else
+    echo "  - Arka Plan Servisi: systemctl --user enable --now turnike-daemon.service"
+fi
 echo "  - İleride Kaldırmak İçin: turnike-uninstall (veya $0 --uninstall)"
