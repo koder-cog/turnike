@@ -1,6 +1,6 @@
 # Trademark and Non-Affiliation Notice
 
-Turnike is a desktop client for `GSBWIFI` dormitory networks.
+Turnike is a desktop client for GSBWIFI dormitory networks.
 
 This project is not affiliated with, endorsed by, or connected to the Ministry of Youth and Sports of the Republic of Turkey or the Directorate General of Credit and Hostels. Institutional names such as GSB, KYK, and e-Government are used strictly in a descriptive capacity to indicate network and service compatibility. The application icon and visual assets are original work. No official government emblems, crests, or logos are used.
 

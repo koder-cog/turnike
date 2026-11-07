@@ -65,7 +65,7 @@ Komut enjeksiyonu riskini engellemek amacıyla dinamik veriler doğrudan komut d
 | `TURNIKE_REMAINING_MB` | Megabayt cinsinden kalan toplam kota | `8420.50` |
 | `TURNIKE_TOTAL_MB` | Megabayt cinsinden toplam paket boyutu | `32768.00` |
 | `TURNIKE_USERNAME` | Aktif oturumun kullanıcı adı veya T.C. kimlik numarası | `12345678901` |
-| `TURNIKE_SSID` | Bağlı bulunulan kablosuz ağ adı | `GSBWIFI` |
+| `TURNIKE_SSID` | Bağlı bulunulan kablosuz ağ adı | GSBWIFI |
 | `TURNIKE_BSSID` | Bağlı bulunulan erişim noktasının MAC adresi | `00:1A:2B:3C:4D:5E` |
 
 ---
