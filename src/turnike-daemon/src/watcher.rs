@@ -66,6 +66,7 @@ impl NetworkWatcher {
             let (_screensaver, mut lock_rx) = ScreenSaverWatcher::start().await;
             let mut logged_out_by_screen_lock = false;
             let mut in_offpeak = false;
+            let mut keyring_warned = false;
 
             loop {
                 let is_locked = *lock_rx.borrow_and_update();
@@ -111,6 +112,7 @@ impl NetworkWatcher {
                 }
 
                 if !target_network_active {
+                    keyring_warned = false;
                     debug!(
                         "Hedef kablosuz ağ '{}' bağlı değil, beklemede",
                         self.config.target_ssid
@@ -144,6 +146,7 @@ impl NetworkWatcher {
 
                 match &current_state {
                     SessionState::Authenticated(info) => {
+                        keyring_warned = false;
                         self.quota_tracker
                             .check_and_notify(info, &self.config)
                             .await;
@@ -223,12 +226,16 @@ impl NetworkWatcher {
                 }
 
                 if current_state == SessionState::CaptiveLocked && self.config.auto_login {
-                    info!(
-                        "Captive portal kilitli tespit edildi, otomatik giriş akışı başlatılıyor"
-                    );
+                    if keyring_warned {
+                        debug!("Anahtarlık kilitli veya erişilemez durumda, ağ değişene kadar tekrar denenmiyor");
+                    } else {
+                        info!(
+                            "Captive portal kilitli tespit edildi, otomatik giriş akışı başlatılıyor"
+                        );
 
-                    match SecretStore::load_async().await {
-                        Ok(Some(creds)) => {
+                        match SecretStore::load_async().await {
+                            Ok(Some(creds)) => {
+                                keyring_warned = false;
                             let is_tr = std::env::var("LC_ALL")
                                 .or_else(|_| std::env::var("LC_MESSAGES"))
                                 .or_else(|_| std::env::var("LANG"))
@@ -341,11 +348,16 @@ impl NetworkWatcher {
                             debug!(
                                 "Anahtarlıkta kayıtlı kimlik bilgisi bulunamadı, otomatik giriş atlandı"
                             );
+                            keyring_warned = true;
                         }
                         Err(e) => {
-                            error!("Sistem anahtarlığından kimlik bilgisi okunamadı: {e}");
+                            warn!(
+                                "Sistem anahtarlığından kimlik bilgisi okunamadı (anahtarlık kilitli olabilir): {e}. Ağ bağlantısı yenilenene kadar bekleniyor"
+                            );
+                            keyring_warned = true;
                         }
                     }
+                }
                 }
 
                 let _ = tx.send(current_state);
