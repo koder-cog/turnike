@@ -77,7 +77,7 @@ jobs:
 
           İndirdiğiniz paketlerin bütünlüğünü doğrulamak için aşağıdaki SHA-256 özetlerini kullanabilirsiniz:
 
-          | Paket Dosyası | SHA-256 Özeti |
+          | Dosya | SHA-256 Özeti |
           | :--- | :--- |
           EOF
 
@@ -92,12 +92,12 @@ jobs:
             git log "${PREV_TAG}..${{ github.ref_name }}" --pretty=format:"- %s (%h)" --no-merges >> target/RELEASE_BODY.md
             echo "" >> target/RELEASE_BODY.md
             echo "" >> target/RELEASE_BODY.md
-            echo "**Tüm Değişiklikler**: ${{ github.server_url }}/${{ github.repository }}/compare/${PREV_TAG}...${{ github.ref_name }}" >> target/RELEASE_BODY.md
+            echo "Tüm değişiklikler: ${{ github.server_url }}/${{ github.repository }}/compare/${PREV_TAG}...${{ github.ref_name }}" >> target/RELEASE_BODY.md
           else
             git log "${{ github.ref_name }}" -n 30 --pretty=format:"- %s (%h)" --no-merges >> target/RELEASE_BODY.md
             echo "" >> target/RELEASE_BODY.md
             echo "" >> target/RELEASE_BODY.md
-            echo "**Tüm Değişiklikler**: ${{ github.server_url }}/${{ github.repository }}/commits/${{ github.ref_name }}" >> target/RELEASE_BODY.md
+            echo "Tüm değişiklikler: ${{ github.server_url }}/${{ github.repository }}/commits/${{ github.ref_name }}" >> target/RELEASE_BODY.md
           fi
 
       - name: Create GitHub Release
