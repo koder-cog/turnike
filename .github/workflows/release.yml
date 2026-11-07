@@ -81,7 +81,7 @@ jobs:
           | :--- | :--- |
           EOF
 
-          awk '{printf "| `%s` | `%s` |\n", $2, $1}' target/SHA256SUMS.txt >> target/RELEASE_BODY.md
+          awk '{printf "| %s | %s |\n", $2, $1}' target/SHA256SUMS.txt >> target/RELEASE_BODY.md
           echo "" >> target/RELEASE_BODY.md
 
           echo "### Olan Biten" >> target/RELEASE_BODY.md
