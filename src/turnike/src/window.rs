@@ -493,52 +493,112 @@ impl MainWindow {
             .title(t.projection.title)
             .build();
 
-        let projection_card = Box::new(Orientation::Vertical, 10);
-        projection_card.add_css_class("card");
-        projection_card.add_css_class("quota-card");
+        let projection_stack_box = Box::new(Orientation::Vertical, 8);
 
-        let proj_metrics_box = Box::new(Orientation::Horizontal, 16);
-        proj_metrics_box.set_homogeneous(true);
+        let general_proj_card = Box::new(Orientation::Vertical, 8);
+        general_proj_card.add_css_class("card");
+        general_proj_card.add_css_class("quota-card");
 
-        let budget_box = Box::new(Orientation::Vertical, 4);
-        let budget_title = Label::new(Some(t.projection.daily_safe_budget));
-        budget_title.set_xalign(0.0);
-        budget_title.add_css_class("caption");
-        budget_title.add_css_class("dim-label");
+        let general_proj_title = Label::new(Some(t.quota.general));
+        general_proj_title.set_xalign(0.0);
+        general_proj_title.add_css_class("heading");
 
-        let budget_val = Label::new(Some("-"));
-        budget_val.set_xalign(0.0);
-        budget_val.add_css_class("heading");
-        budget_val.add_css_class("numeric");
-        budget_box.append(&budget_title);
-        budget_box.append(&budget_val);
+        let gen_metrics_box = Box::new(Orientation::Horizontal, 16);
+        gen_metrics_box.set_homogeneous(true);
 
-        let burn_box = Box::new(Orientation::Vertical, 4);
-        let burn_title = Label::new(Some(t.projection.current_burn_rate));
-        burn_title.set_xalign(0.0);
-        burn_title.add_css_class("caption");
-        burn_title.add_css_class("dim-label");
+        let gen_budget_box = Box::new(Orientation::Vertical, 4);
+        let gen_budget_title = Label::new(Some(t.projection.daily_safe_budget));
+        gen_budget_title.set_xalign(0.0);
+        gen_budget_title.add_css_class("caption");
+        gen_budget_title.add_css_class("dim-label");
 
-        let burn_val = Label::new(Some("-"));
-        burn_val.set_xalign(0.0);
-        burn_val.add_css_class("heading");
-        burn_val.add_css_class("numeric");
-        burn_box.append(&burn_title);
-        burn_box.append(&burn_val);
+        let gen_budget_val = Label::new(Some("-"));
+        gen_budget_val.set_xalign(0.0);
+        gen_budget_val.add_css_class("heading");
+        gen_budget_val.add_css_class("numeric");
+        gen_budget_box.append(&gen_budget_title);
+        gen_budget_box.append(&gen_budget_val);
 
-        proj_metrics_box.append(&budget_box);
-        proj_metrics_box.append(&burn_box);
+        let gen_burn_box = Box::new(Orientation::Vertical, 4);
+        let gen_burn_title = Label::new(Some(t.projection.current_burn_rate));
+        gen_burn_title.set_xalign(0.0);
+        gen_burn_title.add_css_class("caption");
+        gen_burn_title.add_css_class("dim-label");
 
-        let proj_advice = Label::new(Some("-"));
-        proj_advice.set_wrap(true);
-        proj_advice.set_xalign(0.0);
-        proj_advice.add_css_class("caption");
-        proj_advice.add_css_class("dim-label");
+        let gen_burn_val = Label::new(Some("-"));
+        gen_burn_val.set_xalign(0.0);
+        gen_burn_val.add_css_class("heading");
+        gen_burn_val.add_css_class("numeric");
+        gen_burn_box.append(&gen_burn_title);
+        gen_burn_box.append(&gen_burn_val);
 
-        projection_card.append(&proj_metrics_box);
-        projection_card.append(&proj_advice);
+        gen_metrics_box.append(&gen_budget_box);
+        gen_metrics_box.append(&gen_burn_box);
 
-        projection_group.add(&projection_card);
+        let gen_advice = Label::new(Some("-"));
+        gen_advice.set_wrap(true);
+        gen_advice.set_xalign(0.0);
+        gen_advice.add_css_class("caption");
+        gen_advice.add_css_class("dim-label");
+
+        general_proj_card.append(&general_proj_title);
+        general_proj_card.append(&gen_metrics_box);
+        general_proj_card.append(&gen_advice);
+
+        let social_proj_card = Box::new(Orientation::Vertical, 8);
+        social_proj_card.add_css_class("card");
+        social_proj_card.add_css_class("quota-card");
+
+        let social_proj_title = Label::new(Some(t.quota.social));
+        social_proj_title.set_xalign(0.0);
+        social_proj_title.add_css_class("heading");
+
+        let soc_metrics_box = Box::new(Orientation::Horizontal, 16);
+        soc_metrics_box.set_homogeneous(true);
+
+        let soc_budget_box = Box::new(Orientation::Vertical, 4);
+        let soc_budget_title = Label::new(Some(t.projection.daily_safe_budget));
+        soc_budget_title.set_xalign(0.0);
+        soc_budget_title.add_css_class("caption");
+        soc_budget_title.add_css_class("dim-label");
+
+        let soc_budget_val = Label::new(Some("-"));
+        soc_budget_val.set_xalign(0.0);
+        soc_budget_val.add_css_class("heading");
+        soc_budget_val.add_css_class("numeric");
+        soc_budget_box.append(&soc_budget_title);
+        soc_budget_box.append(&soc_budget_val);
+
+        let soc_burn_box = Box::new(Orientation::Vertical, 4);
+        let soc_burn_title = Label::new(Some(t.projection.current_burn_rate));
+        soc_burn_title.set_xalign(0.0);
+        soc_burn_title.add_css_class("caption");
+        soc_burn_title.add_css_class("dim-label");
+
+        let soc_burn_val = Label::new(Some("-"));
+        soc_burn_val.set_xalign(0.0);
+        soc_burn_val.add_css_class("heading");
+        soc_burn_val.add_css_class("numeric");
+        soc_burn_box.append(&soc_burn_title);
+        soc_burn_box.append(&soc_burn_val);
+
+        soc_metrics_box.append(&soc_budget_box);
+        soc_metrics_box.append(&soc_burn_box);
+
+        let soc_advice = Label::new(Some("-"));
+        soc_advice.set_wrap(true);
+        soc_advice.set_xalign(0.0);
+        soc_advice.add_css_class("caption");
+        soc_advice.add_css_class("dim-label");
+
+        social_proj_card.append(&social_proj_title);
+        social_proj_card.append(&soc_metrics_box);
+        social_proj_card.append(&soc_advice);
+
+        projection_stack_box.append(&general_proj_card);
+        projection_stack_box.append(&social_proj_card);
+
+        projection_group.add(&projection_stack_box);
         dash_box.append(&projection_group);
 
         let actions_group = PreferencesGroup::new();
@@ -699,18 +759,27 @@ impl MainWindow {
             let session_row = session_row.clone();
             let session_time_val = session_time_val.clone();
             let wifi_ap_row = wifi_ap_row.clone();
+            let general_card = general_card.clone();
             let general_title = general_title.clone();
             let general_val = general_val.clone();
             let general_progress = general_progress.clone();
             let general_reset_countdown = general_reset_countdown.clone();
+            let social_card = social_card.clone();
             let social_title = social_title.clone();
             let social_val = social_val.clone();
             let social_progress = social_progress.clone();
             let social_reset_countdown = social_reset_countdown.clone();
             let projection_group = projection_group.clone();
-            let budget_val = budget_val.clone();
-            let burn_val = burn_val.clone();
-            let proj_advice = proj_advice.clone();
+            let general_proj_card = general_proj_card.clone();
+            let general_proj_title = general_proj_title.clone();
+            let gen_budget_val = gen_budget_val.clone();
+            let gen_burn_val = gen_burn_val.clone();
+            let gen_advice = gen_advice.clone();
+            let social_proj_card = social_proj_card.clone();
+            let social_proj_title = social_proj_title.clone();
+            let soc_budget_val = soc_budget_val.clone();
+            let soc_burn_val = soc_burn_val.clone();
+            let soc_advice = soc_advice.clone();
             let c_user_for_dialog = current_username.clone();
             let last_info_store = last_quota_info.clone();
             let active_session_store = active_session.clone();
@@ -748,7 +817,11 @@ impl MainWindow {
                 }
                 *active_session_store.borrow_mut() = tracker;
 
-                for pkg in &info.packages {
+                let general_pkg = info.general_package();
+                let social_pkg = info.social_package();
+
+                if let Some(pkg) = general_pkg {
+                    general_card.set_visible(true);
                     let remaining_gb = pkg.remaining_mb / 1024.0;
                     let total_gb = pkg.total_mb / 1024.0;
                     let ratio = pkg.remaining_ratio();
@@ -756,34 +829,66 @@ impl MainWindow {
                     let val_str = format!("{remaining_gb:.2} GB / {total_gb:.2} GB");
                     let countdown_str = l.format_quota_reset_countdown(&pkg.remaining_time);
 
-                    if pkg.is_social() {
-                        social_val.set_text(&val_str);
-                        social_progress.set_fraction(ratio);
-                        apply_quota_bar_style(&social_progress, ratio);
-                        social_reset_countdown.set_text(&countdown_str);
-                    } else {
-                        general_val.set_text(&val_str);
-                        general_progress.set_fraction(ratio);
-                        apply_quota_bar_style(&general_progress, ratio);
-                        general_reset_countdown.set_text(&countdown_str);
-                    }
+                    general_val.set_text(&val_str);
+                    general_progress.set_fraction(ratio);
+                    apply_quota_bar_style(&general_progress, ratio);
+                    general_reset_countdown.set_text(&countdown_str);
+                } else {
+                    general_card.set_visible(false);
                 }
 
-                if let Some(proj) = info.calculate_projection(None) {
-                    projection_group.set_visible(true);
-                    budget_val.set_text(&l.format_mb_or_gb(proj.daily_allowance_mb));
-                    let burn_unit = if l.is_tr() { "gün" } else { "day" };
-                    burn_val.set_text(&format!(
+                if let Some(pkg) = social_pkg {
+                    social_card.set_visible(true);
+                    let remaining_gb = pkg.remaining_mb / 1024.0;
+                    let total_gb = pkg.total_mb / 1024.0;
+                    let ratio = pkg.remaining_ratio();
+
+                    let val_str = format!("{remaining_gb:.2} GB / {total_gb:.2} GB");
+                    let countdown_str = l.format_quota_reset_countdown(&pkg.remaining_time);
+
+                    social_val.set_text(&val_str);
+                    social_progress.set_fraction(ratio);
+                    apply_quota_bar_style(&social_progress, ratio);
+                    social_reset_countdown.set_text(&countdown_str);
+                } else {
+                    social_card.set_visible(false);
+                }
+
+                let burn_unit = if l.is_tr() { "gün" } else { "day" };
+
+                let gen_proj = general_pkg.and_then(|p| p.calculate_projection(None));
+                let has_gen_proj = gen_proj.is_some();
+                if let Some(ref proj) = gen_proj {
+                    general_proj_card.set_visible(true);
+                    general_proj_title.set_visible(social_pkg.is_some());
+                    gen_budget_val.set_text(&l.format_mb_or_gb(proj.daily_allowance_mb));
+                    gen_burn_val.set_text(&format!(
                         "{}/{}",
                         l.format_mb_or_gb(proj.current_burn_rate_mb),
                         burn_unit
                     ));
-
-                    let advice = l.format_burn_rate_advice(&proj);
-                    proj_advice.set_text(&advice);
+                    gen_advice.set_text(&l.format_burn_rate_advice(proj));
                 } else {
-                    projection_group.set_visible(false);
+                    general_proj_card.set_visible(false);
                 }
+
+                let soc_proj = social_pkg.and_then(|p| p.calculate_projection(None));
+                let has_soc_proj = soc_proj.is_some();
+                if let (Some(_), Some(ref proj)) = (social_pkg, soc_proj) {
+                    social_proj_card.set_visible(true);
+                    social_proj_title.set_visible(true);
+                    soc_budget_val.set_text(&l.format_mb_or_gb(proj.daily_allowance_mb));
+                    soc_burn_val.set_text(&format!(
+                        "{}/{}",
+                        l.format_mb_or_gb(proj.current_burn_rate_mb),
+                        burn_unit
+                    ));
+                    soc_advice.set_text(&l.format_burn_rate_advice(proj));
+                } else {
+                    social_proj_card.set_visible(false);
+                }
+
+                projection_group.set_visible(has_gen_proj || has_soc_proj);
             })
         };
 
@@ -800,10 +905,14 @@ impl MainWindow {
             let login_help_row = login_help_row.clone();
             let quotas_group = quotas_group.clone();
             let projection_group = projection_group.clone();
-            let budget_title = budget_title.clone();
-            let burn_title = burn_title.clone();
+            let gen_budget_title = gen_budget_title.clone();
+            let gen_burn_title = gen_burn_title.clone();
+            let soc_budget_title = soc_budget_title.clone();
+            let soc_burn_title = soc_burn_title.clone();
             let general_title = general_title.clone();
             let social_title = social_title.clone();
+            let general_proj_title = general_proj_title.clone();
+            let social_proj_title = social_proj_title.clone();
             let change_pass_row = change_pass_row.clone();
             let last_actions_row = last_actions_row.clone();
             let dash_help_row = dash_help_row.clone();
@@ -840,10 +949,14 @@ impl MainWindow {
                 wifi_ap_row.set_title(t.quota.wifi_ap);
                 general_title.set_text(t.quota.general);
                 social_title.set_text(t.quota.social);
+                general_proj_title.set_text(t.quota.general);
+                social_proj_title.set_text(t.quota.social);
                 quotas_group.set_title(t.quota.title);
                 projection_group.set_title(t.projection.title);
-                budget_title.set_text(t.projection.daily_safe_budget);
-                burn_title.set_text(t.projection.current_burn_rate);
+                gen_budget_title.set_text(t.projection.daily_safe_budget);
+                gen_burn_title.set_text(t.projection.current_burn_rate);
+                soc_budget_title.set_text(t.projection.daily_safe_budget);
+                soc_burn_title.set_text(t.projection.current_burn_rate);
                 change_pass_row.set_title(t.password.change_title);
                 last_actions_row.set_title(t.actions.title);
                 dash_help_row.set_title(t.help.title);
@@ -1514,9 +1627,9 @@ impl MainWindow {
             update_dashboard_fn(&demo_info);
             window_title.set_subtitle(t.status.connected);
             wifi_ap_val.set_text("5 GHz (%84)");
-            budget_val.set_text("850 MB");
-            burn_val.set_text("1.20 GB");
-            proj_advice.set_text("Bu hızla ayın 22. gününde kota biter");
+            gen_budget_val.set_text("850 MB");
+            gen_burn_val.set_text("1.20 GB/gün");
+            gen_advice.set_text("Bu hızla ayın 22. gününde kota biter");
             view_stack.set_visible_child_name("dashboard");
 
             if mode == AppMode::SmokeTest {

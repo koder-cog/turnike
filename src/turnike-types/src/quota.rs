@@ -27,6 +27,67 @@ impl QuotaPackage {
         let lower = self.package_type.to_lowercase();
         lower.contains("social") || lower.contains("sosyal")
     }
+
+    pub fn calculate_projection(
+        &self,
+        total_days_in_cycle: Option<f64>,
+    ) -> Option<QuotaProjection> {
+        if self.total_mb <= 0.0 {
+            return None;
+        }
+
+        let days_remaining = parse_remaining_days(&self.remaining_time)?;
+        let total_days = total_days_in_cycle.unwrap_or(31.0).max(1.0);
+        let days_elapsed = (total_days - days_remaining).max(0.1);
+        let used_mb = self.used_mb();
+
+        let current_burn_rate_mb = used_mb / days_elapsed;
+        let daily_allowance_mb = self.remaining_mb / days_remaining.max(0.1);
+
+        let projected_days_until_depletion = if current_burn_rate_mb > 0.0 {
+            Some(self.remaining_mb / current_burn_rate_mb)
+        } else {
+            None
+        };
+
+        let is_at_risk = match projected_days_until_depletion {
+            Some(proj) => proj < days_remaining,
+            None => false,
+        };
+
+        let remaining_ratio = self.remaining_ratio();
+        let remaining_percent = remaining_ratio * 100.0;
+
+        let risk_level = if !is_at_risk || remaining_percent > 85.0 {
+            ProjectionRiskLevel::Safe
+        } else if let Some(proj) = projected_days_until_depletion {
+            if proj <= days_remaining * 0.6 || self.remaining_mb < 2048.0 {
+                ProjectionRiskLevel::Critical
+            } else {
+                ProjectionRiskLevel::Moderate
+            }
+        } else {
+            ProjectionRiskLevel::Safe
+        };
+
+        let projected_depletion_day = projected_days_until_depletion.map(|p| {
+            let day = (1.0 + days_elapsed + p).round() as u32;
+            day.clamp(1, 31)
+        });
+
+        Some(QuotaProjection {
+            days_remaining,
+            days_elapsed,
+            total_days,
+            daily_allowance_mb,
+            current_burn_rate_mb,
+            projected_days_until_depletion,
+            projected_depletion_day,
+            is_at_risk,
+            risk_level,
+            remaining_percent,
+        })
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
@@ -67,71 +128,65 @@ impl QuotaInfo {
         self.total_mb() / 1024.0
     }
 
+    pub fn general_package(&self) -> Option<&QuotaPackage> {
+        self.packages
+            .iter()
+            .find(|p| !p.is_social())
+            .or_else(|| self.packages.first())
+    }
+
+    pub fn social_package(&self) -> Option<&QuotaPackage> {
+        self.packages.iter().find(|p| p.is_social())
+    }
+
+    pub fn general_total_mb(&self) -> f64 {
+        self.general_package().map(|p| p.total_mb).unwrap_or(0.0)
+    }
+
+    pub fn general_remaining_mb(&self) -> f64 {
+        self.general_package()
+            .map(|p| p.remaining_mb)
+            .unwrap_or(0.0)
+    }
+
+    pub fn general_used_mb(&self) -> f64 {
+        self.general_package().map(|p| p.used_mb()).unwrap_or(0.0)
+    }
+
+    pub fn general_remaining_gb(&self) -> f64 {
+        self.general_remaining_mb() / 1024.0
+    }
+
+    pub fn general_remaining_ratio(&self) -> f64 {
+        self.general_package()
+            .map(|p| p.remaining_ratio())
+            .unwrap_or(0.0)
+    }
+
+    /// GSB portalında Genel İnternet ve Sosyal Medya kotaları bağımsız havuzlardır.
+    /// Sosyal medya kotası genel web trafiğini karşılayamadığından kotaların toplanması
+    /// günlük harcama ve bütçe tahminlerini saptırır. Bu nedenle birincil internet paketi kullanılır.
     pub fn calculate_projection(
         &self,
         total_days_in_cycle: Option<f64>,
     ) -> Option<QuotaProjection> {
-        let total_mb = self.total_mb();
-        let remaining_mb = self.remaining_mb();
-        if total_mb <= 0.0 {
-            return None;
-        }
+        self.general_package()
+            .and_then(|p| p.calculate_projection(total_days_in_cycle))
+    }
 
-        let days_remaining = self
-            .packages
-            .iter()
-            .find_map(|p| parse_remaining_days(&p.remaining_time))?;
+    pub fn general_projection(
+        &self,
+        total_days_in_cycle: Option<f64>,
+    ) -> Option<QuotaProjection> {
+        self.calculate_projection(total_days_in_cycle)
+    }
 
-        let total_days = total_days_in_cycle.unwrap_or(31.0).max(1.0);
-        let days_elapsed = (total_days - days_remaining).max(0.1);
-        let used_mb = self.used_mb();
-
-        let current_burn_rate_mb = used_mb / days_elapsed;
-        let daily_allowance_mb = remaining_mb / days_remaining.max(0.1);
-
-        let projected_days_until_depletion = if current_burn_rate_mb > 0.0 {
-            Some(remaining_mb / current_burn_rate_mb)
-        } else {
-            None
-        };
-
-        let is_at_risk = match projected_days_until_depletion {
-            Some(proj) => proj < days_remaining,
-            None => false,
-        };
-
-        let remaining_ratio = self.remaining_ratio();
-        let remaining_percent = remaining_ratio * 100.0;
-
-        let risk_level = if !is_at_risk || remaining_percent > 85.0 {
-            ProjectionRiskLevel::Safe
-        } else if let Some(proj) = projected_days_until_depletion {
-            if proj <= days_remaining * 0.6 || remaining_mb < 2048.0 {
-                ProjectionRiskLevel::Critical
-            } else {
-                ProjectionRiskLevel::Moderate
-            }
-        } else {
-            ProjectionRiskLevel::Safe
-        };
-
-        let projected_depletion_day = projected_days_until_depletion.map(|p| {
-            let day = (1.0 + days_elapsed + p).round() as u32;
-            day.clamp(1, 31)
-        });
-
-        Some(QuotaProjection {
-            days_remaining,
-            days_elapsed,
-            total_days,
-            daily_allowance_mb,
-            current_burn_rate_mb,
-            projected_days_until_depletion,
-            projected_depletion_day,
-            is_at_risk,
-            risk_level,
-            remaining_percent,
-        })
+    pub fn social_projection(
+        &self,
+        total_days_in_cycle: Option<f64>,
+    ) -> Option<QuotaProjection> {
+        self.social_package()
+            .and_then(|p| p.calculate_projection(total_days_in_cycle))
     }
 }
 
@@ -271,6 +326,8 @@ pub struct QuotaPackageJson {
     pub remaining_ratio: f64,
     pub remaining_time: String,
     pub expiration_date: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub projection: Option<QuotaProjectionJson>,
 }
 
 #[cfg(test)]
@@ -364,5 +421,45 @@ mod tests {
         let proj_safe = info_safe.calculate_projection(Some(31.0)).unwrap();
         assert!(!proj_safe.is_at_risk);
         assert_eq!(proj_safe.risk_level, ProjectionRiskLevel::Safe);
+    }
+
+    #[test]
+    fn test_separate_general_and_social_projections() {
+        let info = QuotaInfo {
+            packages: vec![
+                QuotaPackage {
+                    package_type: "Genel İnternet".to_string(),
+                    total_mb: 32768.0,
+                    remaining_mb: 18595.84,
+                    start_date: "01.10.2026".to_string(),
+                    expiration_date: "31.10.2026".to_string(),
+                    remaining_time: "22 gn 8 sa 25 dk".to_string(),
+                },
+                QuotaPackage {
+                    package_type: "Sosyal Medya".to_string(),
+                    total_mb: 5120.0,
+                    remaining_mb: 5120.0,
+                    start_date: "01.10.2026".to_string(),
+                    expiration_date: "31.10.2026".to_string(),
+                    remaining_time: "22 gn 8 sa 25 dk".to_string(),
+                },
+            ],
+            session_time: None,
+            login_time: None,
+            full_name: None,
+        };
+
+        let gen_proj = info.general_projection(Some(31.0)).unwrap();
+        let soc_proj = info.social_projection(Some(31.0)).unwrap();
+
+        // Genel paket bütçesi ~832 MB/gün olmalı, sosyal medya dahil edilerek ~1061 MB/gün yapılmamalı
+        assert!((gen_proj.daily_allowance_mb - 832.0).abs() < 5.0);
+        assert!(gen_proj.is_at_risk);
+        assert_eq!(gen_proj.projected_depletion_day, Some(21));
+
+        // Sosyal medya paketi hiç harcanmadığı için bütçesi ~229 MB/gün, harcama hızı 0 olmalı
+        assert!((soc_proj.daily_allowance_mb - 229.0).abs() < 5.0);
+        assert_eq!(soc_proj.current_burn_rate_mb, 0.0);
+        assert!(!soc_proj.is_at_risk);
     }
 }

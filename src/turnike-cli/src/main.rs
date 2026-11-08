@@ -647,33 +647,43 @@ fn print_quota(info: &QuotaInfo, lang: CliLang) {
         }
     }
 
-    if let Some(proj) = info.calculate_projection(None) {
-        println!("{}", t.projection_header);
-        let days_unit = if lang.is_tr() { "gün" } else { "days" };
-        let rate_unit = if lang.is_tr() { "MB/gün" } else { "MB/day" };
-        println!(
-            "{}: {:.1} {days_unit}",
-            t.remaining_time_label, proj.days_remaining
-        );
-        println!(
-            "{}: {:.0} {rate_unit}",
-            t.daily_allowance_label, proj.daily_allowance_mb
-        );
-        println!(
-            "{}: {:.0} {rate_unit}",
-            t.daily_burn_label, proj.current_burn_rate_mb
-        );
-        if let Some(day) = proj.projected_depletion_day {
-            if proj.is_at_risk {
+    for pkg in &info.packages {
+        if let Some(proj) = pkg.calculate_projection(None) {
+            if info.packages.len() > 1 {
                 if lang.is_tr() {
-                    println!("Bu hızla ayın {day}. gününde kota tükenir");
+                    println!("\nKullanım Tahmini ({}):", pkg.package_type);
                 } else {
-                    println!("At this rate, quota will be depleted on day {day}");
+                    println!("\nUsage Projection ({}):", pkg.package_type);
                 }
-            } else if lang.is_tr() {
-                println!("Mevcut kullanım hızı ay sonu için yeterli");
             } else {
-                println!("Current usage rate is sufficient for month end");
+                println!("{}", t.projection_header);
+            }
+            let days_unit = if lang.is_tr() { "gün" } else { "days" };
+            let rate_unit = if lang.is_tr() { "MB/gün" } else { "MB/day" };
+            println!(
+                "{}: {:.1} {days_unit}",
+                t.remaining_time_label, proj.days_remaining
+            );
+            println!(
+                "{}: {:.0} {rate_unit}",
+                t.daily_allowance_label, proj.daily_allowance_mb
+            );
+            println!(
+                "{}: {:.0} {rate_unit}",
+                t.daily_burn_label, proj.current_burn_rate_mb
+            );
+            if let Some(day) = proj.projected_depletion_day {
+                if proj.is_at_risk {
+                    if lang.is_tr() {
+                        println!("Bu hızla ayın {day}. gününde kota tükenir");
+                    } else {
+                        println!("At this rate, quota will be depleted on day {day}");
+                    }
+                } else if lang.is_tr() {
+                    println!("Mevcut kullanım hızı ay sonu için yeterli");
+                } else {
+                    println!("Current usage rate is sufficient for month end");
+                }
             }
         }
     }
@@ -774,14 +784,21 @@ fn build_status_json(state: &SessionState, online: bool, lang: CliLang) -> Statu
             let packages = info
                 .packages
                 .iter()
-                .map(|p| QuotaPackageJson {
-                    package_type: p.package_type.clone(),
-                    total_mb: p.total_mb,
-                    remaining_mb: p.remaining_mb,
-                    used_mb: p.used_mb(),
-                    remaining_ratio: p.remaining_ratio(),
-                    remaining_time: p.remaining_time.clone(),
-                    expiration_date: p.expiration_date.clone(),
+                .map(|p| {
+                    let proj = p
+                        .calculate_projection(None)
+                        .as_ref()
+                        .map(QuotaProjectionJson::from);
+                    QuotaPackageJson {
+                        package_type: p.package_type.clone(),
+                        total_mb: p.total_mb,
+                        remaining_mb: p.remaining_mb,
+                        used_mb: p.used_mb(),
+                        remaining_ratio: p.remaining_ratio(),
+                        remaining_time: p.remaining_time.clone(),
+                        expiration_date: p.expiration_date.clone(),
+                        projection: proj,
+                    }
                 })
                 .collect();
 

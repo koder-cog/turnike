@@ -29,8 +29,21 @@ impl QuotaNotificationTracker {
             return;
         }
 
-        let total_mb = quota.total_mb();
-        let remaining_mb = quota.remaining_mb();
+        let target_pkg = quota.general_package();
+        let (total_mb, remaining_mb, remaining_ratio, remaining_gb) = match target_pkg {
+            Some(pkg) => (
+                pkg.total_mb,
+                pkg.remaining_mb,
+                pkg.remaining_ratio(),
+                pkg.remaining_mb / 1024.0,
+            ),
+            None => (
+                quota.total_mb(),
+                quota.remaining_mb(),
+                quota.remaining_ratio(),
+                quota.remaining_gb(),
+            ),
+        };
 
         if total_mb <= 0.0 {
             return;
@@ -43,9 +56,7 @@ impl QuotaNotificationTracker {
         }
         self.last_remaining_mb = remaining_mb;
 
-        let remaining_ratio = quota.remaining_ratio();
         let remaining_percent = remaining_ratio * 100.0;
-        let remaining_gb = quota.remaining_gb();
 
         let is_below_threshold = match config.quota_threshold_mode {
             QuotaThresholdMode::Percentage => remaining_percent <= config.quota_threshold_value,
