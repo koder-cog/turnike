@@ -1,6 +1,6 @@
 [package]
 name = "turnike-client"
-description = "GSB yurt captive portalı için saf HTTP/HTML istemcisi ve kota ayrıştırıcısı"
+description = "GSBWIFI portalı için saf HTTP/HTML istemcisi ve kota ayrıştırıcısı"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

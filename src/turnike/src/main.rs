@@ -25,7 +25,7 @@ fn main() -> glib::ExitCode {
             "--demo" | "-d" => mode = AppMode::Demo,
             "--smoke-test" => mode = AppMode::SmokeTest,
             "--help" | "-h" => {
-                println!("Turnike - GSB yurt ağları için oturum ve kota istemcisi\n");
+                println!("Turnike - GSBWIFI için oturum ve kota istemcisi\n");
                 println!("Kullanım: turnike [SEÇENEKLER]\n");
                 println!("Seçenekler:");
                 println!(

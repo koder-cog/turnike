@@ -1,6 +1,6 @@
 [package]
 name = "turnike-cli"
-description = "GSB ve KYK yurt ağları için komut satırı (CLI) oturum ve kota yöneticisi"
+description = "GSBWIFI için komut satırı (CLI) oturum ve kota yöneticisi"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

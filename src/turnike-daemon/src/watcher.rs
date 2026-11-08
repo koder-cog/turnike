@@ -249,9 +249,9 @@ impl NetworkWatcher {
                                     Ok(info) => {
                                         info!("Otomatik portal girişi tamamlandı");
                                         let (summary, body) = if is_tr {
-                                            ("Oturum Açıldı", "GSB WiFi portalında oturum açıldı")
+                                            ("Oturum Açıldı", "GSBWIFI portalında oturum açıldı")
                                         } else {
-                                            ("Signed In", "Signed in to GSB WiFi portal")
+                                            ("Signed In", "Signed in to GSBWIFI portal")
                                         };
                                         send_desktop_notification(summary, body).await;
                                         self.quota_tracker

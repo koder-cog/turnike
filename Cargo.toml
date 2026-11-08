@@ -19,7 +19,7 @@ repository = "https://github.com/koder-cog/turnike"
 homepage = "https://github.com/koder-cog/turnike"
 keywords = ["gsb", "kyk", "captive-portal", "gtk4", "libadwaita"]
 categories = ["gui", "network-programming", "command-line-utilities"]
-description = "GSB ve KYK yurt ağları için modern masaüstü istemcisi"
+description = "GSBWIFI için GTK4 masaüstü istemcisi"
 
 [workspace.dependencies]
 turnike-types = { path = "src/turnike-types" }

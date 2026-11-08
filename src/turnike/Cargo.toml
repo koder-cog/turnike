@@ -1,6 +1,6 @@
 [package]
 name = "turnike"
-description = "GSB ve KYK yurt ağları için GTK4 ve Libadwaita masaüstü istemcisi"
+description = "GSBWIFI için GTK4 masaüstü istemcisi"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -31,7 +31,7 @@ maintainer = "koder-cog <https://github.com/koder-cog>"
 copyright = "2026, koder-cog"
 license-file = ["../../LICENSE", "4"]
 extended-description = """\
-Turnike, GSB ve KYK yurt ağlarında captive portal üzerinden oturum açmanızı, \
+Turnike, GSBWIFI'da oturum açmanızı, \
 oturumunuzu sonlandırmanızı ve kalan kota bilgilerinizi takip etmenizi sağlayan \
 modern GTK4 ve Libadwaita tabanlı masaüstü uygulaması ve komut satırı aracıdır."""
 depends = "$auto, libadwaita-1-0 (>= 1.5), libgtk-4-1 (>= 4.12)"
@@ -49,7 +49,7 @@ assets = [
 ]
 
 [package.metadata.generate-rpm]
-summary = "GSB ve KYK yurt ağları için masaüstü istemcisi"
+summary = "GSBWIFI için masaüstü istemcisi"
 assets = [
     { source = "../../target/release/turnike", dest = "/usr/bin/turnike", mode = "755" },
     { source = "../../target/release/turnike-cli", dest = "/usr/bin/turnike-cli", mode = "755" },

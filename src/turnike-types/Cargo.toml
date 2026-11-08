@@ -1,6 +1,6 @@
 [package]
 name = "turnike-types"
-description = "Turnike GSB yurt ağı istemcisi için paylaşılan veri modelleri ve hata tipleri"
+description = "Turnike GSBWIFI istemcisi için paylaşılan veri modelleri ve hata tipleri"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

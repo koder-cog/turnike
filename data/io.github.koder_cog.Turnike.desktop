@@ -2,8 +2,8 @@
 Name=Turnike
 GenericName=Dormitory Network Client
 GenericName[tr]=Yurt Ağı İstemcisi
-Comment=Manage KYK WiFi sessions
-Comment[tr]=KYK WiFi oturumlarını yönetin
+Comment=Manage GSBWIFI sessions
+Comment[tr]=GSBWIFI oturumlarını yönetin
 Exec=turnike
 Icon=io.github.koder_cog.Turnike
 Terminal=false

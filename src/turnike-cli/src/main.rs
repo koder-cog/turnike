@@ -8,7 +8,7 @@ use turnike_types::{
 #[derive(Parser)]
 #[command(
     name = "turnike-cli",
-    about = "Turnike: GSB yurt ağları için komut satırı yöneticisi"
+    about = "Turnike: GSBWIFI için komut satırı yöneticisi"
 )]
 struct Cli {
     #[arg(long, global = true)]
@@ -223,8 +223,8 @@ const TR_TEXTS: CliTexts = CliTexts {
     col_active: "Aktif",
     status_offline: "Çevrimdışı",
     status_locked: "Kilitli",
-    tooltip_offline: "Turnike GSB WiFi: Ağ bağlantısı yok veya portal sunucusuna erişilemiyor",
-    tooltip_locked: "Turnike GSB WiFi: Captive portal oturumu açılması bekleniyor",
+    tooltip_offline: "Turnike GSBWIFI: Ağ bağlantısı yok veya portal sunucusuna erişilemiyor",
+    tooltip_locked: "Turnike GSBWIFI: Captive portal oturumu açılması bekleniyor",
     tooltip_status: "Durum: Oturum açık",
     tooltip_total_remaining: "Toplam kalan",
     pinging: "Ağ gecikmesi ölçülüyor (TCP RTT)",
@@ -276,8 +276,8 @@ const EN_TEXTS: CliTexts = CliTexts {
     col_active: "Active",
     status_offline: "Offline",
     status_locked: "Locked",
-    tooltip_offline: "Turnike GSB WiFi: No network connection or portal server unreachable",
-    tooltip_locked: "Turnike GSB WiFi: Captive portal sign in required",
+    tooltip_offline: "Turnike GSBWIFI: No network connection or portal server unreachable",
+    tooltip_locked: "Turnike GSBWIFI: Captive portal sign in required",
     tooltip_status: "Status: Signed in",
     tooltip_total_remaining: "Total remaining",
     pinging: "Measuring network latency (TCP RTT)",
@@ -750,7 +750,7 @@ fn build_status_json(state: &SessionState, online: bool, lang: CliLang) -> Statu
             let text = format!("{remaining_gb:.1} GB");
 
             let mut tooltip_lines =
-                vec!["Turnike GSB WiFi".to_string(), t.tooltip_status.to_string()];
+                vec!["Turnike GSBWIFI".to_string(), t.tooltip_status.to_string()];
             if let Some(ref name) = info.full_name {
                 tooltip_lines.push(format!("{}: {name}", t.user_label));
             }
@@ -846,7 +846,7 @@ mod tests {
         assert_eq!(output_en.text, "Offline");
         assert_eq!(
             output_en.tooltip,
-            "Turnike GSB WiFi: No network connection or portal server unreachable"
+            "Turnike GSBWIFI: No network connection or portal server unreachable"
         );
     }
 
@@ -862,7 +862,7 @@ mod tests {
         assert_eq!(output_en.text, "Locked");
         assert_eq!(
             output_en.tooltip,
-            "Turnike GSB WiFi: Captive portal sign in required"
+            "Turnike GSBWIFI: Captive portal sign in required"
         );
     }
 

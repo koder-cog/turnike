@@ -6,8 +6,8 @@
 
   <name>Turnike</name>
 
-  <summary>Manage KYK WiFi sessions</summary>
-  <summary xml:lang="tr">KYK WiFi oturumlarını yönetin</summary>
+  <summary>Manage GSBWIFI sessions</summary>
+  <summary xml:lang="tr">GSBWIFI oturumlarını yönetin</summary>
 
   <developer id="io.github.koder_cog">
     <name>koder-cog</name>
@@ -15,10 +15,10 @@
 
   <description>
     <p>
-      Turnike takes the hassle out of GSB and KYK dormitory Wi-Fi networks. It signs in automatically without keeping a browser tab open, restores dropped connections, and keeps your network access ready.
+      Turnike takes the hassle out of GSBWIFI. It signs in automatically without keeping a browser tab open, restores dropped connections, and keeps your network access ready.
     </p>
     <p xml:lang="tr">
-      Turnike, GSB ve KYK yurt ağlarındaki portal çilesini ortadan kaldırır. Web tarayıcısı açık tutmaya gerek kalmadan oturumu arka planda yönetir, kopan bağlantıları yeniler ve internet erişimini hazır tutar.
+      Turnike, GSBWIFI ağındaki portal çilesini ortadan kaldırır. Web tarayıcısı açık tutmaya gerek kalmadan oturumu arka planda yönetir, kopan bağlantıları yeniler ve internet erişimini hazır tutar.
     </p>
     <p>
       Track your general and social media quotas at a glance, review past sessions, and update your account password directly inside the app. Turnike stores credentials safely in the system keyring and integrates smoothly with status bars and custom scripts.

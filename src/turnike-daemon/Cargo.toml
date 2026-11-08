@@ -1,6 +1,6 @@
 [package]
 name = "turnike-daemon"
-description = "GSB yurt ağları için arka plan bağlantı izleyicisi ve otomatik oturum açma servisi"
+description = "GSBWIFI için arka plan bağlantı izleyicisi ve otomatik oturum açma servisi"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

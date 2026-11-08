@@ -382,7 +382,7 @@ pub static TR_CATALOG: Catalog = Catalog {
         shortcuts: "Klavye Kısayolları",
         about: "Turnike Hakkında",
         about_developer: "koder-cog",
-        about_comments: "Turnike, GSB ve KYK yurt ağlarında captive portal üzerinden oturum açmayı, askıda kalan bağlantıları devralmayı ve kalan kota bilgilerini anlık takip etmeyi sağlayan modern masaüstü uygulamasıdır.",
+        about_comments: "Turnike, GSBWIFI'da oturum açmayı, askıda kalan bağlantıları devralmayı ve kalan kota bilgilerini anlık takip etmeyi sağlayan GTK4 masaüstü uygulamasıdır.",
         about_source_code: "Kaynak Kodu",
     },
 
@@ -392,7 +392,7 @@ pub static TR_CATALOG: Catalog = Catalog {
         not_logged_in: "Oturum kapalı",
         no_connection: "Ağ bağlantısı yok",
         login_failed: "Oturum açılamadı",
-        foreign_network: "GSBWIFI’a bağlı değil",
+        foreign_network: "GSBWIFI'a bağlı değil",
     },
     network: NetworkTexts {
         foreign_wifi_toast: "GSBWIFI ağına bağlanın",
@@ -405,7 +405,7 @@ pub static TR_CATALOG: Catalog = Catalog {
         login_btn: "Oturum Aç",
         logout_btn: "Oturumu Kapat",
         logout_dialog_heading: "Oturumu Kapat",
-        logout_dialog_body: "Yurt ağı oturumu kapatılacak.",
+        logout_dialog_body: "GSBWIFI oturumu kapatılacak.",
         logout_dialog_cancel: "Vazgeç",
         logout_dialog_confirm: "Oturumu Kapat",
         register_link: "Yeni Kullanıcı Kaydı…",
@@ -475,7 +475,7 @@ pub static TR_CATALOG: Catalog = Catalog {
             "SEM kullanıcısı",
         ],
         verify_btn: "Devam Et",
-        edevlet_info: "e-Devlet’teki GSB Wi-Fi Şifre İşlemleri sayfasından aldığınız geçici şifreyi 15 dakika içinde kullanabilirsiniz",
+        edevlet_info: "e-Devlet'teki GSB Wi-Fi Şifre İşlemleri sayfasından aldığınız geçici şifreyi 15 dakika içinde kullanabilirsiniz",
     },
     actions: ActionsTexts {
         title: "Son Hareketler",
@@ -495,7 +495,7 @@ pub static TR_CATALOG: Catalog = Catalog {
             ),
             (
                 "Şifre Sıfırlama",
-                "Şifrenizi unuttuysanız e-Devlet’te GSB Wi-Fi Şifre İşlemleri sayfasından geçici şifre alıp 15 dakika içinde Şifre Sıfırlama ekranından yeni şifrenizi oluşturabilirsiniz.",
+                "Şifrenizi unuttuysanız e-Devlet'te GSB Wi-Fi Şifre İşlemleri sayfasından geçici şifre alıp 15 dakika içinde Şifre Sıfırlama ekranından yeni şifrenizi oluşturabilirsiniz.",
             ),
             (
                 "Oturum Süresi ve Cihaz Sınırı",
@@ -526,7 +526,7 @@ pub static EN_CATALOG: Catalog = Catalog {
         shortcuts: "Keyboard Shortcuts",
         about: "About Turnike",
         about_developer: "koder-cog",
-        about_comments: "Turnike is an open-source desktop application designed to manage captive portal sessions, preempt dangling connections, and track data quotas on GSB and KYK dormitory networks.",
+        about_comments: "Turnike is a GTK4 desktop application designed to manage captive portal sessions, preempt dangling connections, and track data quotas on the GSBWIFI network.",
         about_source_code: "Source Code",
     },
 
@@ -549,7 +549,7 @@ pub static EN_CATALOG: Catalog = Catalog {
         login_btn: "Sign In",
         logout_btn: "Sign Out",
         logout_dialog_heading: "Log Out",
-        logout_dialog_body: "The network session will be closed.",
+        logout_dialog_body: "The GSBWIFI session will be closed.",
         logout_dialog_cancel: "Cancel",
         logout_dialog_confirm: "Log Out",
         register_link: "New User Registration…",
