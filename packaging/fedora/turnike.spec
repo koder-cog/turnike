@@ -1,5 +1,5 @@
 Name:           turnike
-Version:        0.1.1
+Version:        0.1.2
 Release:        1%{?dist}
 Summary:        GSBWIFI için GTK4 masaüstü istemcisi
 
@@ -73,6 +73,9 @@ cargo test --workspace
 %{_userunitdir}/turnike-daemon.service
 
 %changelog
+* Sun Nov 08 2026 koder-cog <https://github.com/koder-cog> - 0.1.2-1
+- Genel ve sosyal medya kotalari icin ayrik projeksiyon hesaplamasi
+
 * Sun Nov 08 2026 koder-cog <https://github.com/koder-cog> - 0.1.1-1
 - Fedora 45 ve Copr paketleme destegi
 
