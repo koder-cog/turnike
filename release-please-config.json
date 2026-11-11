@@ -1,0 +1,26 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "packages": {
+    ".": {
+      "release-type": "rust",
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        {
+          "type": "generic",
+          "path": "packaging/arch/PKGBUILD"
+        },
+        {
+          "type": "generic",
+          "path": "packaging/fedora/turnike.spec"
+        },
+        {
+          "type": "generic",
+          "path": "data/io.github.koder_cog.Turnike.metainfo.xml"
+        }
+      ]
+    }
+  },
+  "plugins": [
+    "cargo-workspace"
+  ]
+}

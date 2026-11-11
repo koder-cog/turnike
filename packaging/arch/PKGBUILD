@@ -1,6 +1,6 @@
 # Maintainer: koder-cog <https://github.com/koder-cog>
 pkgname=turnike
-pkgver=0.1.2
+pkgver=0.1.2 # x-release-please-version
 pkgrel=1
 pkgdesc="GSBWIFI için GTK4 masaüstü istemcisi ve CLI araçları"
 arch=('x86_64' 'aarch64')

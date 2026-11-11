@@ -2,23 +2,53 @@ name: Release
 
 on:
   push:
+    branches:
+      - main
     tags:
       - "v*"
       - "[0-9]*"
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
+  release-please:
+    name: Release Please
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+    steps:
+      - uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
   build-packages:
     name: Build Linux Packages
     runs-on: ubuntu-latest
+    needs: release-please
+    if: always() && (needs.release-please.outputs.release_created == 'true' || startsWith(github.ref, 'refs/tags/'))
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Determine Target Release Tag
+        id: vars
+        run: |
+          TARGET_TAG="${{ needs.release-please.outputs.tag_name }}"
+          if [ -z "$TARGET_TAG" ]; then
+            TARGET_TAG="${{ github.ref_name }}"
+          fi
+          echo "tag=$TARGET_TAG" >> "$GITHUB_OUTPUT"
+          echo "Hedef release etiketi: $TARGET_TAG"
 
       - name: Install system dependencies
         run: |
@@ -45,16 +75,16 @@ jobs:
       - name: Build Debian package (.deb)
         run: |
           cd src/turnike
-          cargo deb --no-build -p turnike --output ../../target/turnike_${{ github.ref_name }}_amd64.deb
+          cargo deb --no-build -p turnike --output ../../target/turnike_${{ steps.vars.outputs.tag }}_amd64.deb
 
       - name: Build RPM package (.rpm)
         run: |
           cd src/turnike
-          cargo generate-rpm --output ../../target/turnike-${{ github.ref_name }}-1.x86_64.rpm
+          cargo generate-rpm --output ../../target/turnike-${{ steps.vars.outputs.tag }}-1.x86_64.rpm
 
       - name: Create standalone binary tarball
         run: |
-          TARBALL_DIR="turnike-${{ github.ref_name }}-linux-x86_64"
+          TARBALL_DIR="turnike-${{ steps.vars.outputs.tag }}-linux-x86_64"
           mkdir -p "$TARBALL_DIR"
           cp target/release/turnike "$TARBALL_DIR/"
           cp target/release/turnike-cli "$TARBALL_DIR/"
@@ -65,48 +95,18 @@ jobs:
           cp README.md "$TARBALL_DIR/"
           tar -czvf "target/${TARBALL_DIR}.tar.gz" "$TARBALL_DIR"
 
-      - name: Generate SHA256 checksums and release body
+      - name: Generate SHA256 checksums
         run: |
           cd target
           sha256sum turnike*.deb turnike*.rpm turnike*.tar.gz > SHA256SUMS.txt
           cat SHA256SUMS.txt
-          cd ..
 
-          cat << 'EOF' > target/RELEASE_BODY.md
-          ### Doğrulama Referansları
-
-          İndirdiğiniz paketlerin bütünlüğünü doğrulamak için aşağıdaki SHA-256 özetlerini kullanabilirsiniz:
-
-          | Dosya | SHA-256 Özeti |
-          | :--- | :--- |
-          EOF
-
-          awk '{printf "| %s | %s |\n", $2, $1}' target/SHA256SUMS.txt >> target/RELEASE_BODY.md
-          echo "" >> target/RELEASE_BODY.md
-
-          echo "### Olan Biten" >> target/RELEASE_BODY.md
-          echo "" >> target/RELEASE_BODY.md
-
-          PREV_TAG=$(git describe --tags --abbrev=0 "${{ github.ref_name }}^" 2>/dev/null || true)
-          if [ -n "$PREV_TAG" ]; then
-            git log "${PREV_TAG}..${{ github.ref_name }}" --pretty=format:"- %s (%h)" --no-merges >> target/RELEASE_BODY.md
-            echo "" >> target/RELEASE_BODY.md
-            echo "" >> target/RELEASE_BODY.md
-            echo "Tüm değişiklikler: ${{ github.server_url }}/${{ github.repository }}/compare/${PREV_TAG}...${{ github.ref_name }}" >> target/RELEASE_BODY.md
-          else
-            git log "${{ github.ref_name }}" -n 30 --pretty=format:"- %s (%h)" --no-merges >> target/RELEASE_BODY.md
-            echo "" >> target/RELEASE_BODY.md
-            echo "" >> target/RELEASE_BODY.md
-            echo "Tüm değişiklikler: ${{ github.server_url }}/${{ github.repository }}/commits/${{ github.ref_name }}" >> target/RELEASE_BODY.md
-          fi
-
-      - name: Create GitHub Release
+      - name: Upload Release Assets to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          body_path: target/RELEASE_BODY.md
+          tag_name: ${{ steps.vars.outputs.tag }}
           files: |
             target/*.deb
             target/*.rpm
             target/*.tar.gz
             target/SHA256SUMS.txt
-          generate_release_notes: false

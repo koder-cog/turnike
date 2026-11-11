@@ -81,6 +81,18 @@
   </keywords>
 
   <releases>
+    <release version="0.1.2" date="2026-11-11"> <!-- x-release-please-version -->
+      <description>
+        <p>Bypass mandatory portal surveys automatically, separate quota calculations per package, and enhance UI localization.</p>
+        <p xml:lang="tr">Zorunlu portal anketlerini otomatik geçme, ayrık paket projeksiyon hesaplaması ve arayüz yerelleştirme iyileştirmeleri.</p>
+      </description>
+    </release>
+    <release version="0.1.1" date="2026-11-08">
+      <description>
+        <p>Packaging support for Fedora and openSUSE, improved background daemon connection handling.</p>
+        <p xml:lang="tr">Fedora ve openSUSE paketleme desteği, arka plan izleyicisinde bağlantı iyileştirmeleri.</p>
+      </description>
+    </release>
     <release version="0.1.0" date="2026-10-15">
       <description>
         <p>Initial release with captive portal sign-in, quota tracking, and account management</p>
