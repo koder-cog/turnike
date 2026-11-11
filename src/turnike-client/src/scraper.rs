@@ -147,6 +147,41 @@ static RE_FORM_SUBMIT_BUTTON: LazyLock<Regex> = LazyLock::new(|| {
         .expect("Submit butonu regex deseni geçersiz")
 });
 
+static RE_ATTR_ID: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r#"id="([^"]+)""#).expect("Id attribute regex deseni geçersiz")
+});
+
+static RE_ATTR_ACTION: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r#"action="([^"]*)""#).expect("Action attribute regex deseni geçersiz")
+});
+
+static RE_CHECKBOX_INPUT: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r#"<input[^>]*?type="checkbox"[^>]*?>"#)
+        .expect("Checkbox input regex deseni geçersiz")
+});
+
+static RE_RADIO_INPUT: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r#"<input[^>]*?type="radio"[^>]*?>"#).expect("Radio input regex deseni geçersiz")
+});
+
+static RE_ATTR_NAME: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r#"name="([^"]+)""#).expect("Name attribute regex deseni geçersiz")
+});
+
+static RE_ATTR_VALUE: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r#"value="([^"]*)""#).expect("Value attribute regex deseni geçersiz")
+});
+
+static RE_TEXT_INPUT: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r#"<input[^>]*?type="text"[^>]*?>|<textarea[^>]*?>"#)
+        .expect("Text input regex deseni geçersiz")
+});
+
+static RE_FORM_TAG: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r#"(?s)<form\b([^>]*)>(.*?)</form>"#)
+        .expect("Form tag regex deseni geçersiz")
+});
+
 pub fn extract_view_state(html: &str) -> Result<String, PortalError> {
     RE_VIEW_STATE
         .captures(html)
@@ -547,6 +582,266 @@ pub fn parse_faq_page(html: &str) -> Vec<FaqItem> {
     items
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SurveyForm {
+    pub form_id: String,
+    pub action: String,
+    pub view_state: String,
+    pub submit_button_id: String,
+    pub radio_groups: Vec<(String, Vec<String>)>,
+    pub text_inputs: Vec<String>,
+    pub checkboxes: Vec<String>,
+}
+
+pub fn is_survey_page(html: &str) -> bool {
+    // Oturum henüz açılmamışsa veya form giriş şifresi bekliyorsa anket sayılmaz
+    if html.contains("j_spring_security_check") && html.contains("j_password") {
+        return false;
+    }
+
+    let lower = html.to_lowercase();
+
+    // Portal zorunlu anket yönlendirmesi yaptığında surveyRequired.html sayfası döner
+    if html.contains("surveyRequired")
+        || html.contains("surveyForm")
+        || lower.contains("anketi cevapladıktan sonra")
+        || lower.contains("zorunlu anket")
+        || lower.contains("mandatory survey")
+        || lower.contains("surveywar")
+    {
+        return true;
+    }
+
+    // Portal akordeon panelinde anket sekmesi varsa ve boş anket uyarısı içermiyorsa
+    if (html.contains("mainPanel:surveyTab") || html.contains("surveyTab"))
+        && !html.contains("mainPanel:no_survey_main:no_survey")
+        && !lower.contains("there are no surveys")
+        && !lower.contains("anket bulunmamaktadır")
+    {
+        return true;
+    }
+
+    // Çıkış butonu yokken sayfada soru formuna işaret eden radio butonları bulunuyorsa
+    if html.contains(r#"type="radio""#)
+        && (html.contains("survey") || html.contains("anket") || !html.contains("servisUpdateForm"))
+    {
+        return true;
+    }
+
+    false
+}
+
+pub fn extract_survey_form(html: &str) -> Result<SurveyForm, PortalError> {
+    let view_state = extract_view_state(html)?;
+
+    // PrimeFaces anket formunu bulmak için önce formu kapsayan tag aranır
+    let mut target_form_id = None;
+    let mut target_action = None;
+    let mut target_form_html = html;
+
+    for cap in RE_FORM_TAG.captures_iter(html) {
+        if let (Some(attrs_m), Some(content_m)) = (cap.get(1), cap.get(2)) {
+            let attrs = attrs_m.as_str();
+            let content = content_m.as_str();
+            let id = RE_ATTR_ID.captures(attrs).and_then(|c| c.get(1)).map(|m| m.as_str().to_string());
+            let action = RE_ATTR_ACTION.captures(attrs).and_then(|c| c.get(1)).map(|m| m.as_str().to_string());
+
+            let is_survey_target = if let Some(ref form_id) = id {
+                let id_lower = form_id.to_lowercase();
+                id_lower.contains("survey")
+                    || id_lower.contains("anket")
+                    || content.contains(r#"type="radio""#)
+            } else {
+                content.contains(r#"type="radio""#)
+            };
+
+            if is_survey_target {
+                target_form_id = id;
+                target_action = action;
+                target_form_html = content;
+                break;
+            }
+        }
+    }
+
+    let form_id = target_form_id.unwrap_or_else(|| "mainPanel:surveyTab".to_string());
+    let action = target_action.unwrap_or_else(|| "/surveyRequired.html".to_string());
+
+    let mut radio_groups: Vec<(String, Vec<String>)> = Vec::new();
+    for cap in RE_RADIO_INPUT.find_iter(target_form_html) {
+        let tag = cap.as_str();
+        let name = RE_ATTR_NAME
+            .captures(tag)
+            .and_then(|c| c.get(1))
+            .map(|m| m.as_str().to_string());
+        let value = RE_ATTR_VALUE
+            .captures(tag)
+            .and_then(|c| c.get(1))
+            .map(|m| m.as_str().to_string())
+            .unwrap_or_default();
+
+        if let Some(n) = name {
+            if let Some(existing) = radio_groups.iter_mut().find(|(k, _)| k == &n) {
+                if !existing.1.contains(&value) {
+                    existing.1.push(value);
+                }
+            } else {
+                radio_groups.push((n, vec![value]));
+            }
+        }
+    }
+
+    let mut text_inputs = Vec::new();
+    for cap in RE_TEXT_INPUT.find_iter(target_form_html) {
+        let tag = cap.as_str();
+        if let Some(name_m) = RE_ATTR_NAME.captures(tag).and_then(|c| c.get(1)) {
+            let n = name_m.as_str();
+            let n_lower = n.to_lowercase();
+            if !n_lower.contains("viewstate")
+                && !n_lower.contains("activeindex")
+                && !n_lower.contains("scrollstate")
+                && !n_lower.contains("locale")
+                && !text_inputs.contains(&n.to_string())
+            {
+                text_inputs.push(n.to_string());
+            }
+        }
+    }
+
+    let mut checkboxes = Vec::new();
+    for cap in RE_CHECKBOX_INPUT.find_iter(target_form_html) {
+        let tag = cap.as_str();
+        if let Some(name_m) = RE_ATTR_NAME.captures(tag).and_then(|c| c.get(1)) {
+            let n = name_m.as_str();
+            if !checkboxes.contains(&n.to_string()) {
+                checkboxes.push(n.to_string());
+            }
+        }
+    }
+
+    // Buton seçim hiyerarşisi:
+    // 1. "Daha Sonra Hatırlat" (remind) butonu oturumu doğrudan onaylatıp interneti açar.
+    // 2. "Başlat" (start) butonu bazı portal varyasyonlarında onay sonrası interneti başlatır.
+    // 3. "Kaydet / Gönder" (submit) butonu anketin yanıtlarıyla birlikte kaydedilmesini sağlar.
+    let mut remind_button_id = None;
+    let mut start_button_id = None;
+    let mut submit_button_id = None;
+    let mut first_button_id = None;
+
+    for cap in RE_FORM_SUBMIT_BUTTON.captures_iter(target_form_html) {
+        if let (Some(id_m), Some(text_m)) = (cap.get(1), cap.get(2)) {
+            let id = id_m.as_str();
+            let text = text_m.as_str().to_lowercase();
+            let id_lower = id.to_lowercase();
+
+            if first_button_id.is_none() {
+                first_button_id = Some(id.to_string());
+            }
+
+            if text.contains("daha sonra")
+                || text.contains("hatırlat")
+                || text.contains("remind")
+                || text.contains("atla")
+                || text.contains("skip")
+                || id_lower.contains("remind")
+            {
+                remind_button_id = Some(id.to_string());
+                break;
+            } else if text.contains("başlat") || text.contains("start") || id_lower.contains("start") {
+                start_button_id = Some(id.to_string());
+            } else if text.contains("gönder")
+                || text.contains("kaydet")
+                || text.contains("tamamla")
+                || text.contains("submit")
+                || text.contains("save")
+                || id_lower.contains("survey")
+                || id_lower.contains("anket")
+            {
+                submit_button_id = Some(id.to_string());
+            }
+        }
+    }
+
+    let final_button = remind_button_id
+        .or(start_button_id)
+        .or(submit_button_id)
+        .or(first_button_id)
+        .unwrap_or_else(|| format!("{form_id}:submit"));
+
+    Ok(SurveyForm {
+        form_id,
+        action,
+        view_state,
+        submit_button_id: final_button,
+        radio_groups,
+        text_inputs,
+        checkboxes,
+    })
+}
+
+// "I don't care about cookies" mantığıyla formdaki tüm sorular için rastgele
+// makul seçenekler üretilir. Dış kütüphane bağımlılığı yerine nano zaman tohumu kullanılır.
+pub fn build_random_survey_params(form: &SurveyForm) -> Vec<(String, String)> {
+    let mut params = vec![
+        ("javax.faces.partial.ajax".to_string(), "true".to_string()),
+        ("javax.faces.source".to_string(), form.submit_button_id.clone()),
+        ("javax.faces.partial.execute".to_string(), "@all".to_string()),
+        (form.form_id.clone(), form.form_id.clone()),
+        (form.submit_button_id.clone(), form.submit_button_id.clone()),
+        ("javax.faces.ViewState".to_string(), form.view_state.clone()),
+    ];
+
+    let seed = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.subsec_nanos() as usize)
+        .unwrap_or(4242);
+
+    for (idx, (radio_name, values)) in form.radio_groups.iter().enumerate() {
+        if !values.is_empty() {
+            let pick_idx = seed.wrapping_add(idx * 37) % values.len();
+            params.push((radio_name.clone(), values[pick_idx].clone()));
+        }
+    }
+
+    for cb in &form.checkboxes {
+        params.push((cb.clone(), "on".to_string()));
+    }
+
+    const DUMMY_ANSWERS: [&str; 5] = ["İyi", "Teşekkürler", "Sorun yok", "Yeterli", "Normal"];
+    for (idx, text_name) in form.text_inputs.iter().enumerate() {
+        let pick_idx = seed.wrapping_add(idx * 17) % DUMMY_ANSWERS.len();
+        params.push((text_name.clone(), DUMMY_ANSWERS[pick_idx].to_string()));
+    }
+
+    params
+}
+
+pub fn save_diagnostic_dump(html: &str, prefix: &str) {
+    let timestamp = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or(0);
+
+    let home = std::env::var("HOME").unwrap_or_else(|_| ".".to_string());
+    let dump_dir = std::path::PathBuf::from(home)
+        .join(".local")
+        .join("state")
+        .join("turnike")
+        .join("dumps");
+
+    if let Err(e) = std::fs::create_dir_all(&dump_dir) {
+        tracing::debug!("Teşhis döküm dizini oluşturulamadı: {e}");
+        return;
+    }
+
+    let file_path = dump_dir.join(format!("{prefix}_{timestamp}.html"));
+    if let Err(e) = std::fs::write(&file_path, html) {
+        tracing::debug!("Teşhis dökümü yazılamadı: {e}");
+    } else {
+        tracing::info!("Portal teşhis dökümü kaydedildi: {}", file_path.display());
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -783,5 +1078,90 @@ mod tests {
         let info = res.unwrap();
         assert_eq!(info.full_name.as_deref(), Some("MEHMET KAYA"));
         assert!(info.packages.is_empty());
+    }
+
+    #[test]
+    fn test_is_survey_page_negative() {
+        let no_survey_html = r#"
+        <div id="mainPanel:surveyTab">
+            <form id="mainPanel:no_survey_main">
+                <i><span id="mainPanel:no_survey_main:no_survey">There are no surveys.</span></i>
+            </form>
+        </div>
+        <form id="servisUpdateForm"><button id="btn">End Session</button></form>
+        "#;
+        assert!(!is_survey_page(no_survey_html));
+    }
+
+    #[test]
+    fn test_is_survey_page_positive() {
+        let survey_html = r#"
+        <div id="mainPanel:surveyTab">
+            <form id="surveyForm" action="/index.html">
+                <input type="radio" name="surveyForm:q1" value="1" />
+                <input type="radio" name="surveyForm:q1" value="2" />
+                <button id="surveyForm:submit" type="submit">Gönder</button>
+            </form>
+        </div>
+        "#;
+        assert!(is_survey_page(survey_html));
+    }
+
+    #[test]
+    fn test_extract_and_build_survey_params() {
+        let html = r#"
+        <form id="mainPanel:tabview:surveyForm" action="/index.html" method="POST">
+            <input type="hidden" name="javax.faces.ViewState" value="vs12345" />
+            <input type="radio" name="surveyForm:soru1" value="1" />
+            <input type="radio" name="surveyForm:soru1" value="2" />
+            <input type="radio" name="surveyForm:soru1" value="3" />
+            <input type="radio" name="surveyForm:soru2" value="Evet" />
+            <input type="radio" name="surveyForm:soru2" value="Hayır" />
+            <input type="text" name="surveyForm:gorus" />
+            <button id="surveyForm:btnGonder" type="submit"><span>Anketi Tamamla</span></button>
+        </form>
+        "#;
+
+        let form = extract_survey_form(html).expect("Anket formu çıkarılabilmeli");
+        assert_eq!(form.view_state, "vs12345");
+        assert_eq!(form.radio_groups.len(), 2);
+        assert_eq!(form.text_inputs.len(), 1);
+        assert_eq!(form.submit_button_id, "surveyForm:btnGonder");
+
+        let params = build_random_survey_params(&form);
+        assert!(params.iter().any(|(k, v)| k == "javax.faces.partial.ajax" && v == "true"));
+        assert!(params.iter().any(|(k, v)| k == "surveyForm:soru1" && (v == "1" || v == "2" || v == "3")));
+        assert!(params.iter().any(|(k, v)| k == "surveyForm:soru2" && (v == "Evet" || v == "Hayır")));
+        assert!(params.iter().any(|(k, _)| k == "surveyForm:gorus"));
+    }
+
+    #[test]
+    fn test_extract_survey_form_with_remind_later_button() {
+        let html = r#"
+        <form id="j_idt32:j_idt37:0:surveyForm" name="j_idt32:j_idt37:0:surveyForm" method="post" action="/surveyRequired.html">
+            <input type="hidden" name="j_idt32:j_idt37:0:surveyForm" value="j_idt32:j_idt37:0:surveyForm" />
+            <input type="hidden" name="javax.faces.ViewState" value="vs_survey_999" />
+            <table id="j_idt32:j_idt37:0:surveyForm:j_idt41:0:j_idt46">
+                <input name="j_idt32:j_idt37:0:surveyForm:j_idt41:0:j_idt46" type="radio" value="10160" />
+                <input name="j_idt32:j_idt37:0:surveyForm:j_idt41:0:j_idt46" type="radio" value="10161" />
+            </table>
+            <input id="j_idt32:j_idt37:0:surveyForm:iletisimBilgi_input" name="j_idt32:j_idt37:0:surveyForm:iletisimBilgi_input" type="checkbox" />
+            <button id="j_idt32:j_idt37:0:surveyForm:j_idt66" type="submit"><span>Kaydet ve Devam Et</span></button>
+            <button id="j_idt32:j_idt37:0:surveyForm:j_idt67" type="submit"><span>Daha Sonra Hatırlat</span></button>
+        </form>
+        "#;
+
+        assert!(is_survey_page(html));
+        let form = extract_survey_form(html).expect("Gerçek anket formu ayrıştırılabilmeli");
+        assert_eq!(form.form_id, "j_idt32:j_idt37:0:surveyForm");
+        assert_eq!(form.action, "/surveyRequired.html");
+        assert_eq!(form.view_state, "vs_survey_999");
+        assert_eq!(form.submit_button_id, "j_idt32:j_idt37:0:surveyForm:j_idt67");
+        assert_eq!(form.radio_groups.len(), 1);
+        assert_eq!(form.checkboxes.len(), 1);
+
+        let params = build_random_survey_params(&form);
+        assert!(params.iter().any(|(k, v)| k == "j_idt32:j_idt37:0:surveyForm:j_idt67" && v == "j_idt32:j_idt37:0:surveyForm:j_idt67"));
+        assert!(params.iter().any(|(k, v)| k == "j_idt32:j_idt37:0:surveyForm:iletisimBilgi_input" && v == "on"));
     }
 }

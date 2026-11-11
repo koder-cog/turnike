@@ -1220,7 +1220,21 @@ impl MainWindow {
                         }
                         ActionResponse::LoginFailed(err) => {
                             let msg = l.portal_error_message(&err);
-                            toast_overlay_clone.add_toast(Toast::new(&msg));
+                            let toast = Toast::new(&msg);
+                            if matches!(err, PortalError::SurveyRequired(_)) {
+                                let btn_label = if l.is_tr() {
+                                    "Tarayıcıda Aç"
+                                } else {
+                                    "Open in Browser"
+                                };
+                                toast.set_button_label(Some(btn_label));
+                                toast.connect_button_clicked(|_| {
+                                    let _ = std::process::Command::new("xdg-open")
+                                        .arg("https://wifi.gsb.gov.tr/index.html")
+                                        .spawn();
+                                });
+                            }
+                            toast_overlay_clone.add_toast(toast);
                             window_title_clone.set_subtitle(t.status.login_failed);
                             login_action_btn_clone.set_sensitive(true);
                             view_stack_clone.set_visible_child_name("login");

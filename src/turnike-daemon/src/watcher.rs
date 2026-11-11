@@ -346,6 +346,21 @@ impl NetworkWatcher {
                                             }
                                         }
                                     }
+                                    Err(PortalError::SurveyRequired(msg)) => {
+                                        warn!("Zorunlu anket tespit edildi ancak otomatik çözülemedi: {msg}");
+                                        let (summary, body) = if is_tr {
+                                            (
+                                                "Zorunlu Anket",
+                                                "GSBWIFI portalında zorunlu anket var, internete erişmek için lütfen tarayıcıdan tamamlayın",
+                                            )
+                                        } else {
+                                            (
+                                                "Mandatory Survey",
+                                                "A mandatory survey is required on GSBWIFI portal, please complete it via browser",
+                                            )
+                                        };
+                                        send_desktop_notification(summary, body).await;
+                                    }
                                     Err(e) => {
                                         error!("Otomatik giriş başarısız oldu: {e}");
                                     }

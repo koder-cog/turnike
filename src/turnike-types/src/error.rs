@@ -21,6 +21,9 @@ pub enum PortalError {
     #[error("Portal yanıtı ayrıştırılamadı: {0}")]
     ParseError(String),
 
+    #[error("Portalda zorunlu anket var: {0}")]
+    SurveyRequired(String),
+
     #[error("Anahtarlık erişim hatası: {0}")]
     Keyring(String),
 
@@ -41,6 +44,9 @@ impl PortalError {
             match self {
                 Self::Network(s) if is_gsb_unreachable(s) => {
                     "GSBWIFI portalına ulaşılamadı. Lütfen GSBWIFI ağına bağlı olduğunuzdan emin olun.".to_string()
+                }
+                Self::SurveyRequired(s) => {
+                    format!("Portalda zorunlu anket tespit edildi: {s}")
                 }
                 Self::Keyring(s) => {
                     let hint = if s.contains("ServiceUnknown")
@@ -67,6 +73,9 @@ impl PortalError {
                 Self::SessionNotFound => "No active portal session found".to_string(),
                 Self::MaxSessionsReached(s) => format!("Maximum active sessions reached: {s}"),
                 Self::ParseError(s) => format!("Failed to parse portal response: {s}"),
+                Self::SurveyRequired(s) => {
+                    format!("Mandatory portal survey detected: {s}")
+                }
                 Self::Keyring(s) => {
                     let hint = if s.contains("ServiceUnknown")
                         || s.contains("No such secret service")

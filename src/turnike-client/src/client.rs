@@ -1,13 +1,14 @@
 use crate::endpoints::{
     PORTAL_BASE, PORTAL_CHANGE_PASSWORD, PORTAL_FAQ, PORTAL_FORGOT_PASSWORD, PORTAL_INDEX_PAGE,
-    PORTAL_LAST_ACTIONS, PORTAL_LOGIN_CHECK, PORTAL_LOGIN_PAGE, PORTAL_REGISTER, PROBE_FIREFOX,
-    PROBE_GSTATIC,
+    PORTAL_LAST_ACTIONS, PORTAL_LOGIN_CHECK, PORTAL_LOGIN_PAGE, PORTAL_REGISTER,
+    PORTAL_SURVEY_REQUIRED, PROBE_FIREFOX, PROBE_GSTATIC,
 };
 use crate::scraper::{
-    extract_ajax_redirect, extract_change_password_button_id, extract_forgot_password_button_id,
-    extract_form_submit_button_id, extract_logout_button_id, extract_portal_error,
-    extract_portal_success, extract_register_button_id, extract_ui_message, extract_view_state,
-    is_max_sessions_message, parse_faq_page, parse_last_actions, parse_quota_page,
+    build_random_survey_params, extract_ajax_redirect, extract_change_password_button_id,
+    extract_forgot_password_button_id, extract_form_submit_button_id, extract_logout_button_id,
+    extract_portal_error, extract_portal_success, extract_register_button_id, extract_survey_form,
+    extract_ui_message, extract_view_state, is_max_sessions_message, is_survey_page,
+    parse_faq_page, parse_last_actions, parse_quota_page, save_diagnostic_dump,
 };
 use reqwest::header::{
     ACCEPT, ACCEPT_LANGUAGE, HeaderMap, HeaderValue, LOCATION, ORIGIN, REFERER, USER_AGENT,
@@ -120,6 +121,8 @@ impl PortalClient {
     // Tomcat RemoteIpValve eksikliği nedeniyle 302 yanıtlarında açık http:// adresi döner.
     // reqwest otomatik yönlendirme politikası hedef URL'yi mutasyona uğratmaya izin vermediği
     // için yönlendirme Policy::none ile durdurulup HTTPS şemasına zorlanır.
+    // Kök yol ("/") zorla "/index.html" yapılmaz çünkü sunucu kök istekte zorunlu anket kontrolü
+    // yaparak kullanıcıyı dinamik olarak "/surveyRequired.html" adresine yönlendirebilir.
     fn normalize_portal_location(location: &str) -> String {
         let trimmed = location.trim();
         let Ok(base) = Url::parse(PORTAL_BASE) else {
@@ -129,9 +132,6 @@ impl PortalClient {
         if let Ok(mut parsed) = base.join(trimmed) {
             if parsed.host_str() == Some("wifi.gsb.gov.tr") && parsed.scheme() == "http" {
                 let _ = parsed.set_scheme("https");
-            }
-            if parsed.path() == "/" || parsed.path().is_empty() {
-                parsed.set_path("/index.html");
             }
             parsed.to_string()
         } else {
@@ -209,6 +209,15 @@ impl PortalClient {
             return Ok(SessionState::CaptiveLocked);
         }
 
+        let mut body = body;
+        if is_survey_page(&body) || final_url.contains("surveyRequired") {
+            info!("Durum yoklamasında zorunlu anket tespit edildi, otomatik çözülüyor");
+            save_diagnostic_dump(&body, "survey_detected_status");
+            if let Ok(next_body) = self.solve_survey_and_submit(&body).await {
+                body = next_body;
+            }
+        }
+
         match parse_quota_page(&body) {
             Ok(quota) => Ok(SessionState::Authenticated(quota)),
             Err(e) => {
@@ -281,7 +290,7 @@ impl PortalClient {
             return Err(PortalError::AuthenticationFailed(error_msg));
         }
 
-        let body = if final_url.contains("index.html")
+        let mut body = if (final_url.contains("index.html") || final_url.contains("surveyRequired"))
             && !body.is_empty()
             && !body.contains("j_spring_security_check")
         {
@@ -296,6 +305,34 @@ impl PortalClient {
             let (_, index_body) = self.follow_https_redirects(index_resp).await?;
             index_body
         };
+
+        // GSB portalı zorunlu anket çıktığında internet erişimini kilitler.
+        // "I don't care about cookies" mantığıyla formdaki sorular otomatik rastgele
+        // yanıtlanıp gönderilir ve oturum akışı kesintiye uğramaz.
+        if is_survey_page(&body) || final_url.contains("surveyRequired") {
+            info!("Zorunlu anket tespit edildi, otomatik çözücü ('I don't care about cookies' modu) devreye giriyor");
+            save_diagnostic_dump(&body, "survey_detected");
+
+            match self.solve_survey_and_submit(&body).await {
+                Ok(next_body) => {
+                    info!("Zorunlu anket otomatik olarak gönderildi");
+                    body = next_body;
+                    if (is_survey_page(&body) || body.contains("surveyForm"))
+                        && let Ok(fresh_resp) = http.get(PORTAL_INDEX_PAGE).send().await
+                        && let Ok((_, fresh_body)) = self.follow_https_redirects(fresh_resp).await
+                    {
+                        body = fresh_body;
+                    }
+                }
+                Err(e) => {
+                    warn!("Otomatik anket çözümü tamamlanamadı: {e}");
+                    save_diagnostic_dump(&body, "survey_solve_failed");
+                    return Err(PortalError::SurveyRequired(
+                        "Portalda zorunlu anket var, otomatik doldurulamadı".to_string(),
+                    ));
+                }
+            }
+        }
 
         if let Some(err) = extract_portal_error(&body) {
             if is_max_sessions_message(&err) {
@@ -700,6 +737,65 @@ impl PortalClient {
         Ok(())
     }
 
+    pub async fn solve_survey_and_submit(&self, html: &str) -> Result<String, PortalError> {
+        let http = self.client();
+        let form = extract_survey_form(html)?;
+        let params = build_random_survey_params(&form);
+
+        let target_url = if form.action.starts_with("http") {
+            form.action.clone()
+        } else if form.action.starts_with('/') {
+            format!("{PORTAL_BASE}{}", form.action)
+        } else if !form.action.is_empty() {
+            format!("{PORTAL_BASE}/{}", form.action)
+        } else {
+            PORTAL_SURVEY_REQUIRED.to_string()
+        };
+
+        debug!(
+            "Zorunlu anket gönderiliyor: hedef={}, form_id={}, buton={}, radyo={}, cb={}",
+            target_url,
+            form.form_id,
+            form.submit_button_id,
+            form.radio_groups.len(),
+            form.checkboxes.len()
+        );
+
+        let resp = http
+            .post(&target_url)
+            .header(REFERER, &target_url)
+            .header(ORIGIN, PORTAL_BASE)
+            .header("Faces-Request", "partial/ajax")
+            .header("X-Requested-With", "XMLHttpRequest")
+            .form(&params)
+            .send()
+            .await
+            .map_err(|e| PortalError::Network(e.to_string()))?;
+
+        let resp_text = resp.text().await.unwrap_or_default();
+
+        if let Some(redirect_target) = extract_ajax_redirect(&resp_text) {
+            let next_url = Self::normalize_portal_location(&redirect_target);
+            let next_resp = http
+                .get(&next_url)
+                .header(REFERER, &target_url)
+                .send()
+                .await
+                .map_err(|e| PortalError::Network(e.to_string()))?;
+            let (_, body) = self.follow_https_redirects(next_resp).await?;
+            return Ok(body);
+        }
+
+        let index_resp = http
+            .get(PORTAL_INDEX_PAGE)
+            .header(REFERER, &target_url)
+            .send()
+            .await
+            .map_err(|e| PortalError::Network(e.to_string()))?;
+        let (_, body) = self.follow_https_redirects(index_resp).await?;
+        Ok(body)
+    }
+
     pub async fn preempt_session(&self, creds: &Credentials) -> Result<QuotaInfo, PortalError> {
         info!(
             "Askıda kalan oturumu devralma süreci başlatılıyor: {}",
@@ -751,7 +847,7 @@ mod tests {
         );
         assert_eq!(
             PortalClient::normalize_portal_location("http://wifi.gsb.gov.tr/"),
-            "https://wifi.gsb.gov.tr/index.html"
+            "https://wifi.gsb.gov.tr/"
         );
         assert_eq!(
             PortalClient::normalize_portal_location("/login.html"),
@@ -762,8 +858,8 @@ mod tests {
             "https://wifi.gsb.gov.tr/login.html"
         );
         assert_eq!(
-            PortalClient::normalize_portal_location("https://wifi.gsb.gov.tr"),
-            "https://wifi.gsb.gov.tr/index.html"
+            PortalClient::normalize_portal_location("https://wifi.gsb.gov.tr/surveyRequired.html"),
+            "https://wifi.gsb.gov.tr/surveyRequired.html"
         );
     }
 }

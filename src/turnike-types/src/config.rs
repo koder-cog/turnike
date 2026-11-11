@@ -50,6 +50,9 @@ pub struct DaemonConfig {
 
     #[serde(default)]
     pub radar: RadarConfig,
+
+    #[serde(default = "default_true")]
+    pub auto_solve_surveys: bool,
 }
 
 impl Default for DaemonConfig {
@@ -67,6 +70,7 @@ impl Default for DaemonConfig {
             hooks: HookConfig::default(),
             offpeak: OffPeakConfig::default(),
             radar: RadarConfig::default(),
+            auto_solve_surveys: true,
         }
     }
 }
