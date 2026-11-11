@@ -347,7 +347,9 @@ impl NetworkWatcher {
                                         }
                                     }
                                     Err(PortalError::SurveyRequired(msg)) => {
-                                        warn!("Zorunlu anket tespit edildi ancak otomatik çözülemedi: {msg}");
+                                        warn!(
+                                            "Zorunlu anket tespit edildi ancak otomatik çözülemedi: {msg}"
+                                        );
                                         let (summary, body) = if is_tr {
                                             (
                                                 "Zorunlu Anket",

@@ -174,17 +174,11 @@ impl QuotaInfo {
             .and_then(|p| p.calculate_projection(total_days_in_cycle))
     }
 
-    pub fn general_projection(
-        &self,
-        total_days_in_cycle: Option<f64>,
-    ) -> Option<QuotaProjection> {
+    pub fn general_projection(&self, total_days_in_cycle: Option<f64>) -> Option<QuotaProjection> {
         self.calculate_projection(total_days_in_cycle)
     }
 
-    pub fn social_projection(
-        &self,
-        total_days_in_cycle: Option<f64>,
-    ) -> Option<QuotaProjection> {
+    pub fn social_projection(&self, total_days_in_cycle: Option<f64>) -> Option<QuotaProjection> {
         self.social_package()
             .and_then(|p| p.calculate_projection(total_days_in_cycle))
     }

@@ -310,7 +310,9 @@ impl PortalClient {
         // "I don't care about cookies" mantığıyla formdaki sorular otomatik rastgele
         // yanıtlanıp gönderilir ve oturum akışı kesintiye uğramaz.
         if is_survey_page(&body) || final_url.contains("surveyRequired") {
-            info!("Zorunlu anket tespit edildi, otomatik çözücü ('I don't care about cookies' modu) devreye giriyor");
+            info!(
+                "Zorunlu anket tespit edildi, otomatik çözücü ('I don't care about cookies' modu) devreye giriyor"
+            );
             save_diagnostic_dump(&body, "survey_detected");
 
             match self.solve_survey_and_submit(&body).await {

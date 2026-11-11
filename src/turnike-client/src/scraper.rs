@@ -147,9 +147,8 @@ static RE_FORM_SUBMIT_BUTTON: LazyLock<Regex> = LazyLock::new(|| {
         .expect("Submit butonu regex deseni geçersiz")
 });
 
-static RE_ATTR_ID: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r#"id="([^"]+)""#).expect("Id attribute regex deseni geçersiz")
-});
+static RE_ATTR_ID: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r#"id="([^"]+)""#).expect("Id attribute regex deseni geçersiz"));
 
 static RE_ATTR_ACTION: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(r#"action="([^"]*)""#).expect("Action attribute regex deseni geçersiz")
@@ -178,8 +177,7 @@ static RE_TEXT_INPUT: LazyLock<Regex> = LazyLock::new(|| {
 });
 
 static RE_FORM_TAG: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r#"(?s)<form\b([^>]*)>(.*?)</form>"#)
-        .expect("Form tag regex deseni geçersiz")
+    Regex::new(r#"(?s)<form\b([^>]*)>(.*?)</form>"#).expect("Form tag regex deseni geçersiz")
 });
 
 pub fn extract_view_state(html: &str) -> Result<String, PortalError> {
@@ -643,8 +641,14 @@ pub fn extract_survey_form(html: &str) -> Result<SurveyForm, PortalError> {
         if let (Some(attrs_m), Some(content_m)) = (cap.get(1), cap.get(2)) {
             let attrs = attrs_m.as_str();
             let content = content_m.as_str();
-            let id = RE_ATTR_ID.captures(attrs).and_then(|c| c.get(1)).map(|m| m.as_str().to_string());
-            let action = RE_ATTR_ACTION.captures(attrs).and_then(|c| c.get(1)).map(|m| m.as_str().to_string());
+            let id = RE_ATTR_ID
+                .captures(attrs)
+                .and_then(|c| c.get(1))
+                .map(|m| m.as_str().to_string());
+            let action = RE_ATTR_ACTION
+                .captures(attrs)
+                .and_then(|c| c.get(1))
+                .map(|m| m.as_str().to_string());
 
             let is_survey_target = if let Some(ref form_id) = id {
                 let id_lower = form_id.to_lowercase();
@@ -747,7 +751,10 @@ pub fn extract_survey_form(html: &str) -> Result<SurveyForm, PortalError> {
             {
                 remind_button_id = Some(id.to_string());
                 break;
-            } else if text.contains("başlat") || text.contains("start") || id_lower.contains("start") {
+            } else if text.contains("başlat")
+                || text.contains("start")
+                || id_lower.contains("start")
+            {
                 start_button_id = Some(id.to_string());
             } else if text.contains("gönder")
                 || text.contains("kaydet")
@@ -784,8 +791,14 @@ pub fn extract_survey_form(html: &str) -> Result<SurveyForm, PortalError> {
 pub fn build_random_survey_params(form: &SurveyForm) -> Vec<(String, String)> {
     let mut params = vec![
         ("javax.faces.partial.ajax".to_string(), "true".to_string()),
-        ("javax.faces.source".to_string(), form.submit_button_id.clone()),
-        ("javax.faces.partial.execute".to_string(), "@all".to_string()),
+        (
+            "javax.faces.source".to_string(),
+            form.submit_button_id.clone(),
+        ),
+        (
+            "javax.faces.partial.execute".to_string(),
+            "@all".to_string(),
+        ),
         (form.form_id.clone(), form.form_id.clone()),
         (form.submit_button_id.clone(), form.submit_button_id.clone()),
         ("javax.faces.ViewState".to_string(), form.view_state.clone()),
@@ -1129,9 +1142,21 @@ mod tests {
         assert_eq!(form.submit_button_id, "surveyForm:btnGonder");
 
         let params = build_random_survey_params(&form);
-        assert!(params.iter().any(|(k, v)| k == "javax.faces.partial.ajax" && v == "true"));
-        assert!(params.iter().any(|(k, v)| k == "surveyForm:soru1" && (v == "1" || v == "2" || v == "3")));
-        assert!(params.iter().any(|(k, v)| k == "surveyForm:soru2" && (v == "Evet" || v == "Hayır")));
+        assert!(
+            params
+                .iter()
+                .any(|(k, v)| k == "javax.faces.partial.ajax" && v == "true")
+        );
+        assert!(
+            params
+                .iter()
+                .any(|(k, v)| k == "surveyForm:soru1" && (v == "1" || v == "2" || v == "3"))
+        );
+        assert!(
+            params
+                .iter()
+                .any(|(k, v)| k == "surveyForm:soru2" && (v == "Evet" || v == "Hayır"))
+        );
         assert!(params.iter().any(|(k, _)| k == "surveyForm:gorus"));
     }
 
@@ -1156,12 +1181,24 @@ mod tests {
         assert_eq!(form.form_id, "j_idt32:j_idt37:0:surveyForm");
         assert_eq!(form.action, "/surveyRequired.html");
         assert_eq!(form.view_state, "vs_survey_999");
-        assert_eq!(form.submit_button_id, "j_idt32:j_idt37:0:surveyForm:j_idt67");
+        assert_eq!(
+            form.submit_button_id,
+            "j_idt32:j_idt37:0:surveyForm:j_idt67"
+        );
         assert_eq!(form.radio_groups.len(), 1);
         assert_eq!(form.checkboxes.len(), 1);
 
         let params = build_random_survey_params(&form);
-        assert!(params.iter().any(|(k, v)| k == "j_idt32:j_idt37:0:surveyForm:j_idt67" && v == "j_idt32:j_idt37:0:surveyForm:j_idt67"));
-        assert!(params.iter().any(|(k, v)| k == "j_idt32:j_idt37:0:surveyForm:iletisimBilgi_input" && v == "on"));
+        assert!(
+            params
+                .iter()
+                .any(|(k, v)| k == "j_idt32:j_idt37:0:surveyForm:j_idt67"
+                    && v == "j_idt32:j_idt37:0:surveyForm:j_idt67")
+        );
+        assert!(
+            params
+                .iter()
+                .any(|(k, v)| k == "j_idt32:j_idt37:0:surveyForm:iletisimBilgi_input" && v == "on")
+        );
     }
 }
