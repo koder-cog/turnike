@@ -1,5 +1,7 @@
 Name:           turnike
-Version:        0.1.2 # x-release-please-version
+# x-release-please-start-version
+Version:        0.1.2
+# x-release-please-end
 Release:        1%{?dist}
 Summary:        GSBWIFI için GTK4 masaüstü istemcisi
 
